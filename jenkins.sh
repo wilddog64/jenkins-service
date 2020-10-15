@@ -12,7 +12,7 @@ fi
 
 # create volumes to share the Docker client TLS certificates that needed to
 # connect to the Docker daemon and persist the Jenkins data
-docker volume ls | grep jenkins-coker-certs 2>&1 > /dev/null
+docker volume ls | grep jenkins-docker-certs 2>&1 > /dev/null
 if [[ $? != 0 ]]; then
     docker volume create jenkins-docker-certs
     echo create a docker volume jenkins-docker-certs
