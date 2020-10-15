@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
+# refer to https://www.jenkins.io/doc/book/installing/ for how to
+# install jenkins container. This script is basedd on that document
+
+# create a bridge network
 docker network ls | grep jenkins 2>&1 > /dev/null
 if [[ $? != 0 ]]; then
     docker network create jenkins
     echo create a docker network jenkins
 fi
 
+# create volumes to share the Docker client TLS certificates that needed to
+# connect to the Docker daemon and persist the Jenkins data
 docker volume ls | grep jenkins-coker-certs 2>&1 > /dev/null
 if [[ $? != 0 ]]; then
     docker volume create jenkins-docker-certs
@@ -18,6 +24,8 @@ if [[ $? != 0 ]]; then
     echo create a docker volume jenkins-data
 fi
 
+# in order to execute docker commands within a Jenkins node, we
+# download and run the docker:dind image
 docker container ls | grep jenkins-docker 2>&1
 if [[ $? != 0 ]]; then
     docker container run --name jenkins-docker --rm --detach \
@@ -32,6 +40,7 @@ if [[ $? != 0 ]]; then
     fi
 fi
 
+# download and run jenkins blueocean
 docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
 if [[ $? != 0 ]]; then
     docker container run --name jenkins-blueocean --rm --detach \
