@@ -25,7 +25,7 @@ function create_volumes() {
     fi
 }
 
-function download_and_run_containers() {
+function start_docker_dind_container() {
     # in order to execute docker commands within a Jenkins node, we
     # download and run the docker:dind image
     docker container ls | grep jenkins-docker 2>&1
@@ -41,7 +41,9 @@ function download_and_run_containers() {
                     exit -1
                 fi
     fi
+}
 
+function run_docker_jenkins_blueocean() {
     # download and run jenkins blueocean
     docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
@@ -58,6 +60,16 @@ function download_and_run_containers() {
                     exit -1
                 fi
     fi
+}
+
+function download_and_run_containers() {
+
+    # run docker dind conainter
+    start_docker_dind_container
+
+    # run docker jenkins/blueocean image
+    run_docker_jenkins_blueocean
+
 }
 
 function start_jenkins() {
@@ -84,5 +96,6 @@ function stop_jenkins_container() {
     fi
     echo successfully stop container $container_name
 }
+
 # --- main ---
 start_jenkins
