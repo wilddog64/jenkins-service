@@ -98,4 +98,10 @@ function stop_jenkins_container() {
 }
 
 # --- main ---
-start_jenkins
+
+case "$1" in
+    start)
+        start_jenkins
+        ;;
+    stop)
+esac
