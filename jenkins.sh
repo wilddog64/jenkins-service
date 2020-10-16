@@ -89,7 +89,7 @@ function start_jenkins() {
 function stop_jenkins_container() {
     container_name=$1
 
-    docker ps -a | grep -v CONTAINER | sed -nE "/$container_name/p" | awk '{print $1}' | xargs docker container stop
+    docker ps -a | grep -v CONTAINER | grep $container_name | awk '{print $1}' | xargs docker container stop
     if [[ $? != 0 ]]; then
         echo unable to stop container $container_name
         exit -1
