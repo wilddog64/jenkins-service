@@ -92,7 +92,7 @@ function stop_jenkins_container() {
     docker ps -a | grep -v CONTAINER | grep $container_name | awk '{print $1}' | xargs docker container stop
     if [[ $? != 0 ]]; then
         echo unable to stop container $container_name
-        exit -1
+        exit 1
     fi
     echo successfully stop container $container_name
 }
