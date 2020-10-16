@@ -3,56 +3,75 @@
 # refer to https://www.jenkins.io/doc/book/installing/ for how to
 # install jenkins container. This script is basedd on that document
 
-# create a bridge network
-docker network ls | grep jenkins 2>&1 > /dev/null
-if [[ $? != 0 ]]; then
-    docker network create jenkins
-    echo create a docker network jenkins
-fi
-
-# create volumes to share the Docker client TLS certificates that needed to
-# connect to the Docker daemon and persist the Jenkins data
-docker volume ls | grep jenkins-docker-certs 2>&1 > /dev/null
-if [[ $? != 0 ]]; then
-    docker volume create jenkins-docker-certs
-    echo create a docker volume jenkins-docker-certs
-fi
-
-docker volume ls | grep jenkins-data 2>&1 > /dev/null
-if [[ $? != 0 ]]; then
-    docker volume create jenkins-data
-    echo create a docker volume jenkins-data
-fi
-
-# in order to execute docker commands within a Jenkins node, we
-# download and run the docker:dind image
-docker container ls | grep jenkins-docker 2>&1
-if [[ $? != 0 ]]; then
-    docker container run --name jenkins-docker --rm --detach \
-      --privileged --network jenkins --network-alias docker \
-      --env DOCKER_TLS_CERTDIR=/certs \
-      --volume jenkins-docker-certs:/certs/client \
-      --volume jenkins-data:/var/jenkins_home \
-      docker:dind
+function create_network() {
+    docker network ls | grep jenkins 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
-        echo unable to download docker:dind image
-        exit -1
+        docker network create jenkins
+        echo create a docker network jenkins
     fi
-fi
+}
 
-# download and run jenkins blueocean
-docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
-if [[ $? != 0 ]]; then
-    docker container run --name jenkins-blueocean --rm --detach \
-      --network jenkins \
-      --env DOCKER_HOST=tcp://docker:2376 \
-      --env DOCKER_CERT_PATH=/certs/client \
-      --env DOCKER_TLS_VERIFY=1 \
-      --volume jenkins-data:/var/jenkins_home \
-      --volume jenkins-docker-certs:/certs/client:ro \
-      --publish 8080:8080 --publish 50000:50000 jenkinsci/blueocean
+function create_volumes() {
+    docker volume ls | grep jenkins-docker-certs 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
-        echo unable to download and run jenkinsci/blueocean image
-        exit -1
+        docker volume create jenkins-docker-certs
+        echo create a docker volume jenkins-docker-certs
     fi
-fi
+
+    docker volume ls | grep jenkins-data 2>&1 > /dev/null
+    if [[ $? != 0 ]]; then
+        docker volume create jenkins-data
+        echo create a docker volume jenkins-data
+    fi
+}
+
+function download_and_run_containers() {
+    # in order to execute docker commands within a Jenkins node, we
+    # download and run the docker:dind image
+    docker container ls | grep jenkins-docker 2>&1
+    if [[ $? != 0 ]]; then
+        docker container run --name jenkins-docker --rm --detach \
+            --privileged --network jenkins --network-alias docker \
+            --env DOCKER_TLS_CERTDIR=/certs \
+            --volume jenkins-docker-certs:/certs/client \
+            --volume jenkins-data:/var/jenkins_home \
+            docker:dind
+                if [[ $? != 0 ]]; then
+                    echo unable to download docker:dind image
+                    exit -1
+                fi
+    fi
+
+    # download and run jenkins blueocean
+    docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
+    if [[ $? != 0 ]]; then
+        docker container run --name jenkins-blueocean --rm --detach \
+            --network jenkins \
+            --env DOCKER_HOST=tcp://docker:2376 \
+            --env DOCKER_CERT_PATH=/certs/client \
+            --env DOCKER_TLS_VERIFY=1 \
+            --volume jenkins-data:/var/jenkins_home \
+            --volume jenkins-docker-certs:/certs/client:ro \
+            --publish 8080:8080 --publish 50000:50000 jenkinsci/blueocean
+                if [[ $? != 0 ]]; then
+                    echo unable to download and run jenkinsci/blueocean image
+                    exit -1
+                fi
+    fi
+}
+
+function start_jenkins() {
+
+    # create a bridge network
+    create_network
+
+    # create volumes to share the Docker client TLS certificates that needed to
+    # connect to the Docker daemon and persist the Jenkins data
+    create_volumes
+
+    # download and run the containers
+    download_and_run_containers
+}
+
+# --- main ---
+start_jenkins
