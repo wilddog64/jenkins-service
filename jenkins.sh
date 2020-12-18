@@ -36,10 +36,10 @@ function start_docker_dind_container() {
             --volume jenkins-docker-certs:/certs/client \
             --volume jenkins-data:/var/jenkins_home \
             docker:dind
-                if [[ $? != 0 ]]; then
-                    echo unable to download docker:dind image
-                    exit -1
-                fi
+        if [[ $? != 0 ]]; then
+            echo unable to download docker:dind image
+            exit -1
+        fi
     fi
 }
 
