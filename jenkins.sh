@@ -72,6 +72,10 @@ function download_and_run_containers() {
 
 }
 
+function in_jenkins_container() {
+    docker exec -it jenkins-blueocean bash
+}
+
 function start_jenkins() {
 
     # create a bridge network
@@ -111,4 +115,6 @@ case "$1" in
     stop-all)
         stop_all_jenkins_container
         ;;
+    into-container)
+        in_jenkins_container
 esac
