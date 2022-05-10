@@ -54,7 +54,7 @@ function run_docker_jenkins_blueocean() {
             --env DOCKER_TLS_VERIFY=1 \
             --volume jenkins-data:/var/jenkins_home \
             --volume jenkins-docker-certs:/certs/client:ro \
-            --publish 8080:8080 --publish 50000:50000 jenkinsci/blueocean
+            --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 jenkinsci/blueocean
                 if [[ $? != 0 ]]; then
                     echo unable to download and run jenkinsci/blueocean image
                     exit -1
