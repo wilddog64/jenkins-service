@@ -83,6 +83,22 @@ function start_docker_dind_container() {
     fi
 }
 
+# Function to start Jenkins container
+function start_jenkins_container() {
+    docker ps | grep -q jenkins-blueocean
+    if [[ $? != 0 ]]; then
+        echo "Starting Jenkins container..."
+        docker run --name jenkins-blueocean --rm --detach \
+            --network jenkins \
+            --volume jenkins-data:/var/jenkins_home \
+            --publish 8080:8080 --publish 50000:50000 \
+            jenkinsci/blueocean
+        echo "Jenkins container started. Access it at http://localhost:8080"
+    else
+        echo "Jenkins container is already running."
+    fi
+}
+
 function run_docker_jenkins_blueocean() {
     # download and run jenkins blueocean
     docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
@@ -129,7 +145,8 @@ function start_jenkins() {
     create_volumes
 
     # download and run the containers
-    download_and_run_containers
+    # download_and_run_containers
+    start_jenkins_container
 }
 
 # stop_jenkins_container function will stop a given container that user provides
