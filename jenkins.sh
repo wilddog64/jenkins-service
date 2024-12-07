@@ -3,6 +3,26 @@
 # refer to https://www.jenkins.io/doc/book/installing/ for how to
 # install jenkins container. This script is basedd on that document
 
+#!/usr/bin/env bash
+
+# Function to check if a command exists
+function command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# alias docker for podman
+function docker() {
+   # Check if podman exists
+   if command_exists podman; then
+      echo "Podman is installed. Overriding docker to use podman..."
+      # Override docker with podman
+      podman "$@"
+   else
+      echo "Error: 'podman' is not installed. Exiting."
+      exit 1
+   fi
+}
+
 function create_network() {
     docker network ls | grep jenkins 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
