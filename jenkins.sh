@@ -90,10 +90,10 @@ function run_docker_jenkins_blueocean() {
             --volume jenkins-data:/var/jenkins_home \
             --volume jenkins-docker-certs:/certs/client:ro \
             --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 jenkinsci/blueocean
-                if [[ $? != 0 ]]; then
-                    echo unable to download and run jenkinsci/blueocean image
-                    exit -1
-                fi
+        if [[ $? != 0 ]]; then
+            echo unable to download and run jenkinsci/blueocean image
+            exit -1
+        fi
     fi
 }
 
