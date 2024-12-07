@@ -72,6 +72,23 @@ function download_and_run_containers() {
 
 }
 
+### Function to Start Jenkins Container with Docker Socket Access
+function start_jenkins_container() {
+    docker container ls | grep -q jenkins-blueocean
+    if [[ $? != 0 ]]; then
+        echo "Starting Jenkins container with Docker socket access..."
+        docker container run --name jenkins-blueocean --rm --detach \
+            --network jenkins \
+            -v jenkins-data:/var/jenkins_home \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -p 8080:8080 -p 50000:50000 \
+            jenkins/jenkins:blueocean
+        echo "Jenkins container started. Access it at http://localhost:8080"
+    else
+        echo "Jenkins container is already running."
+    fi
+}
+
 function in_jenkins_container() {
     docker exec -it jenkins-blueocean bash
 }
@@ -86,7 +103,8 @@ function start_jenkins() {
     create_volumes
 
     # download and run the containers
-    download_and_run_containers
+    # download_and_run_containers
+    start_jenkins_container
 }
 
 # stop_jenkins_container function will stop a given container that user provides
