@@ -14,7 +14,12 @@ function docker() {
      echo podman not installed
      exit -1
   fi
+
   podman "$@"
+  if [[ $? != 0 ]]; then
+     echo error executing podman command
+     exit -1
+  fi
 }
 
 # Function to check if a docker machine exists
