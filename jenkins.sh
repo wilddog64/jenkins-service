@@ -3,6 +3,41 @@
 # refer to https://www.jenkins.io/doc/book/installing/ for how to
 # install jenkins container. This script is basedd on that document
 
+# check if given command exists
+function command_exist() {
+   command -v $1 "$1" 2 >&1 > /dev/null
+}
+
+# alias podman as docker
+function docker() {
+  if ! command_exist podman; then
+     echo podman not installed
+     exit -1
+  fi
+  podman "$@"
+}
+
+# Function to check if a docker machine exists
+function docker_machine_exists() {
+   docker machine list --format "{{.Name}}" | grep -q "^$1\$"
+}
+
+# Function to check if a docker machine is running
+function docker_machine_running() {
+   docker machine list --format "{{.Name}} {{.Running}}" | awk '{print $2}' | grep -q "true"
+}
+
+# start docker machine
+function start_docker_machine() {
+   if ! docker_machine_exists; then
+      docker machine init
+   fi
+
+   if ! docker_machine_running; then
+      docker machine start
+   fi
+}
+
 function create_network() {
     docker network ls | grep jenkins 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
@@ -77,6 +112,9 @@ function in_jenkins_container() {
 }
 
 function start_jenkins() {
+
+    # start docker machine
+    start_docker_machine
 
     # create a bridge network
     create_network
