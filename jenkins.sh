@@ -10,6 +10,14 @@ function command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+function docker_machine_exist() {
+   if ! command_exists podman; then
+      echo "podman is not installed"
+      exit -1
+   fi
+   podman machine list --format "{{.Name}}" | grep -q "^$1\$"
+}
+
 # alias docker for podman
 function docker() {
    # Check if podman exists
@@ -20,6 +28,21 @@ function docker() {
    else
       echo "Error: 'podman' is not installed. Exiting."
       exit 1
+   fi
+}
+
+# check if docker machine is running or not
+function docker_machine_running() {
+   docker machine list --format "{{.Name}} {{.Running}}" | awk '{print $2}' | grep -q "true"
+}
+
+# ensure docker machine exist and running
+function start_docker_machine() {
+   if ! docker_machine_exist; then
+      docker machine init
+   fi
+   if ! docker_machine_running; then
+      docker machine start
    fi
 }
 
@@ -114,6 +137,9 @@ function in_jenkins_container() {
 }
 
 function start_jenkins() {
+
+   # start docker machine if it is not
+   start_docker_machine
 
     # create a bridge network
     create_network
