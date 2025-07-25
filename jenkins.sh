@@ -202,9 +202,9 @@ function stop_jenkins_container() {
     echo successfully stop container $container_name
 }
 
-function stop_all_jenkins_container() {
+function stop_jenkins_container() {
     # stop_jenkins_container dind
-    stop_jenkins_container blueocean
+    docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
 }
 
 # --- main ---
@@ -213,8 +213,8 @@ case "$1" in
     start)
         start_jenkins "$2"
         ;;
-    stop-all)
-        stop_all_jenkins_container
+    stop)
+        stop_jenkins_container
         ;;
     show-admin-passwd)
         show_jenkins_init_admin_password
