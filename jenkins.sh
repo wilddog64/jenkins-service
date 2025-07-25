@@ -104,12 +104,15 @@ function run_docker_jenkins_blueocean() {
     docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
         docker container run --name jenkins-blueocean --rm --detach \
+            --userns=keep-id \
             --network jenkins \
             --env DOCKER_HOST=tcp://docker:2376 \
             --env DOCKER_CERT_PATH=/certs/client \
             --env DOCKER_TLS_VERIFY=1 \
+            --env JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
             --volume jenkins-data:/var/jenkins_home \
             --volume jenkins-docker-certs:/certs/client:ro \
+            -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d:z \
             --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 jenkinsci/blueocean
         if [[ $? != 0 ]]; then
             echo unable to download and run jenkinsci/blueocean image
@@ -126,6 +129,31 @@ function download_and_run_containers() {
     # run docker jenkins/blueocean image
     run_docker_jenkins_blueocean
 
+}
+
+# Function to install plugins using jenkins-plugin-cli
+function install_jenkins_plugins() {
+    PLUGINS_FILE="plugins.txt"
+
+    if [[ ! -f "$PLUGINS_FILE" ]]; then
+        echo "Error: $PLUGINS_FILE not found in the current directory!"
+        exit 1
+    fi
+
+    echo "Installing Jenkins plugins from plugins.txt..."
+
+    # Mount the current directory (.) and access plugins.txt
+    docker run --rm \
+        --volume "$(pwd):/usr/share/jenkins/ref:ro" \
+        jenkins/jenkins:lts bash -c "
+            jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+        "
+
+    echo "Jenkins plugins installed successfully."
+}
+
+function show_jenkins_init_admin_password() {
+   docker logs jenkins-blueocean | grep -C 2 "Please use the following password"
 }
 
 function in_jenkins_container() {
@@ -162,7 +190,7 @@ function stop_jenkins_container() {
 }
 
 function stop_all_jenkins_container() {
-    stop_jenkins_container dind
+    # stop_jenkins_container dind
     stop_jenkins_container blueocean
 }
 
@@ -174,6 +202,9 @@ case "$1" in
         ;;
     stop-all)
         stop_all_jenkins_container
+        ;;
+    show-admin-passwd)
+        show_jenkins_init_admin_password
         ;;
     into-container)
         in_jenkins_container
