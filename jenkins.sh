@@ -94,42 +94,31 @@ function start_docker_dind_container() {
 
 # Function to start Jenkins container
 function start_jenkins_container() {
-    docker ps | grep -q jenkins-lts
-    if [[ $? != 0 ]]; then
-        echo "Starting Jenkins container..."
-        docker run --name jenkins-lts --rm --detach \
-            --network jenkins \
-            --volume jenkins-data:/var/jenkins_home \
-            --publish 8080:8080 --publish 50000:50000 \
-            jenkins/jenkins:2.440.3
-        echo "Jenkins container started. Access it at http://localhost:8080"
-    else
-        echo "Jenkins container is already running."
-    fi
-}
+    local jenkins_version=${1:-2.440.3}
 
-function run_docker_jenkins_blueocean() {
-    # download and run jenkins-lts
-    docker container ls | grep jenkins-lts 2>&1 > /dev/null
-    if [[ $? != 0 ]]; then
-        docker container run --name jenkins-lts --rm --detach \
-            --userns=keep-id \
-            --network jenkins \
-            --env DOCKER_HOST=tcp://docker:2376 \
-            --env DOCKER_CERT_PATH=/certs/client \
-            --env DOCKER_TLS_VERIFY=1 \
-            --env JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
-            --volume jenkins-data:/var/jenkins_home \
-            --volume jenkins-docker-certs:/certs/client:ro \
-            -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d:z \
-            --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 \
-              jenkins/jenkins:2.440.3
-        if [[ $? != 0 ]]; then
-            echo unable to download and run jenkins-lts image
-            exit -1
+    # Check if jenkins-lts container is running
+    docker ps | grep -q jenkins-lts
+    if [[ $? == 0 ]]; then
+        # Container is running, check version
+        current_version=$(docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
+        if [[ "$current_version" == "$jenkins_version" ]]; then
+            echo "Jenkins container version $jenkins_version is already running."
+            return 0
+        else
+            echo "Stopping Jenkins container with version $current_version to start version $jenkins_version..."
+            docker stop jenkins-lts
         fi
     fi
+
+    echo "Starting Jenkins container version $jenkins_version..."
+    docker run --name jenkins-lts --rm --detach \
+        --network jenkins \
+        --volume jenkins-data:/var/jenkins_home \
+        --publish 8080:8080 --publish 50000:50000 \
+        jenkins/jenkins:${jenkins_version}
+    echo "Jenkins container started. Access it at http://localhost:8080"
 }
+
 
 function download_and_run_containers() {
 
@@ -142,24 +131,37 @@ function download_and_run_containers() {
 }
 
 # Function to install plugins using jenkins-plugin-cli
-function install_jenkins_plugins() {
-    PLUGINS_FILE="plugins.txt"
+function run_docker_jenkins_blueocean() {
+    local jenkins_version=${1:-2.440.3}
 
-    if [[ ! -f "$PLUGINS_FILE" ]]; then
-        echo "Error: $PLUGINS_FILE not found in the current directory!"
-        exit 1
+    # Check if jenkins-lts container is running
+    docker container ls | grep jenkins-lts 2>&1 > /dev/null
+    if [[ $? == 0 ]]; then
+        # Container is running, check version
+        current_version=$(docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
+        if [[ "$current_version" == "$jenkins_version" ]]; then
+            echo "Jenkins container version $jenkins_version is already running."
+            return 0
+        else
+            echo "Stopping Jenkins container with version $current_version to start version $jenkins_version..."
+            docker stop jenkins-lts
+        fi
     fi
 
-    echo "Installing Jenkins plugins from plugins.txt..."
-
-    # Mount the current directory (.) and access plugins.txt
-    docker run --rm \
-        --volume "$(pwd):/usr/share/jenkins/ref:ro" \
-        jenkins/jenkins:lts bash -c "
-            jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
-        "
-
-    echo "Jenkins plugins installed successfully."
+    # download and run jenkins-lts
+    echo "Starting Jenkins container version $jenkins_version..."
+    docker container run --name jenkins-lts --rm --detach \
+        --userns=keep-id \
+        --network jenkins \
+        --env DOCKER_HOST=tcp://docker:2376 \
+        --env DOCKER_CERT_PATH=/certs/client \
+        --env DOCKER_TLS_VERIFY=1 \
+        --env JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
+        --volume jenkins-data:/var/jenkins_home \
+        --volume jenkins-docker-certs:/certs/client:ro \
+        -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d:z \
+        --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 \
+          jenkins/jenkins:${jenkins_version}
 }
 
 function show_jenkins_init_admin_password() {
@@ -171,6 +173,7 @@ function in_jenkins_container() {
 }
 
 function start_jenkins() {
+   version=$1
 
     # start docker machine
     start_docker_machine
@@ -184,7 +187,7 @@ function start_jenkins() {
 
     # download and run the containers
     # download_and_run_containers
-    start_jenkins_container
+    start_jenkins_container "$version"
 }
 
 # stop_jenkins_container function will stop a given container that user provides
@@ -208,7 +211,7 @@ function stop_all_jenkins_container() {
 
 case "$1" in
     start)
-        start_jenkins
+        start_jenkins "$2"
         ;;
     stop-all)
         stop_all_jenkins_container
