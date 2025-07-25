@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+MACHINE_NAME='podman-machine-default'
+
 # refer to https://www.jenkins.io/doc/book/installing/ for how to
 # install jenkins container. This script is basedd on that document
 
 # check if given command exists
+
 function command_exist() {
    command -v $1 "$1" 2 >&1 > /dev/null
 }
@@ -25,21 +28,27 @@ function docker() {
 # Function to check if a docker machine exists
 function docker_machine_exists() {
    docker machine list --format "{{.Name}}" | grep -q "^$1\$"
+   return [[ $? != 0 ]]
 }
 
 # Function to check if a docker machine is running
 function docker_machine_running() {
-   docker machine list --format "{{.Name}} {{.Running}}" | awk '{print $2}' | grep -q "true"
+   docker machine list --format "{{.Name}} {{.Running}}" | grep -q "^$MACHINE_NAME$"
+   return [[ $? != 0 ]]
 }
 
 # start docker machine
 function start_docker_machine() {
-   if ! docker_machine_exists; then
+   if docker_machine_exists $MACHINE_NAME; then
       docker machine init
+   else
+      echo "Docker machine $MACHINE_NAME already exists."
    fi
 
-   if ! docker_machine_running; then
+   if docker_machine_running; then
       docker machine start
+   else
+      echo "Docker machine $MACHINE_NAME is already running."
    fi
 }
 
