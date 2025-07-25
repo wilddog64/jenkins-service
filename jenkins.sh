@@ -28,13 +28,13 @@ function docker() {
 # Function to check if a docker machine exists
 function docker_machine_exists() {
    docker machine list --format "{{.Name}}" | grep -q "^$1\$"
-   return [[ $? != 0 ]]
+   return  [[ $? != 0 ]]
 }
 
 # Function to check if a docker machine is running
 function docker_machine_running() {
    docker machine list --format "{{.Name}} {{.Running}}" | grep -q "^$MACHINE_NAME$"
-   return [[ $? != 0 ]]
+   return  [[ $? != 0 ]]
 }
 
 # start docker machine
@@ -94,14 +94,14 @@ function start_docker_dind_container() {
 
 # Function to start Jenkins container
 function start_jenkins_container() {
-    docker ps | grep -q jenkins-blueocean
+    docker ps | grep -q jenkins-lts
     if [[ $? != 0 ]]; then
         echo "Starting Jenkins container..."
-        docker run --name jenkins-blueocean --rm --detach \
+        docker run --name jenkins-lts --rm --detach \
             --network jenkins \
             --volume jenkins-data:/var/jenkins_home \
             --publish 8080:8080 --publish 50000:50000 \
-            jenkinsci/blueocean
+            jenkins/jenkins:2.440.3
         echo "Jenkins container started. Access it at http://localhost:8080"
     else
         echo "Jenkins container is already running."
@@ -109,10 +109,10 @@ function start_jenkins_container() {
 }
 
 function run_docker_jenkins_blueocean() {
-    # download and run jenkins blueocean
-    docker container ls | grep jenkins-blueocean 2>&1 > /dev/null
+    # download and run jenkins-lts
+    docker container ls | grep jenkins-lts 2>&1 > /dev/null
     if [[ $? != 0 ]]; then
-        docker container run --name jenkins-blueocean --rm --detach \
+        docker container run --name jenkins-lts --rm --detach \
             --userns=keep-id \
             --network jenkins \
             --env DOCKER_HOST=tcp://docker:2376 \
@@ -122,9 +122,10 @@ function run_docker_jenkins_blueocean() {
             --volume jenkins-data:/var/jenkins_home \
             --volume jenkins-docker-certs:/certs/client:ro \
             -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d:z \
-            --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 jenkinsci/blueocean
+            --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 \
+              jenkins/jenkins:2.440.3
         if [[ $? != 0 ]]; then
-            echo unable to download and run jenkinsci/blueocean image
+            echo unable to download and run jenkins-lts image
             exit -1
         fi
     fi
@@ -135,7 +136,7 @@ function download_and_run_containers() {
     # run docker dind conainter
     start_docker_dind_container
 
-    # run docker jenkins/blueocean image
+    # run docker jenkins/lts image
     run_docker_jenkins_blueocean
 
 }
@@ -162,7 +163,7 @@ function install_jenkins_plugins() {
 }
 
 function show_jenkins_init_admin_password() {
-   docker logs jenkins-blueocean | grep -C 2 "Please use the following password"
+   docker logs jenkins-lts | grep -C 2 "Please use the following password"
 }
 
 function in_jenkins_container() {
