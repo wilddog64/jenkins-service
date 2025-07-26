@@ -115,6 +115,7 @@ function start_jenkins_container() {
         --network jenkins \
         --volume jenkins-data:/var/jenkins_home \
         --publish 8080:8080 --publish 50000:50000 \
+        --publish 2233:2233 \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
 }
@@ -169,7 +170,7 @@ function show_jenkins_init_admin_password() {
 }
 
 function in_jenkins_container() {
-    docker exec -it jenkins-blueocean bash
+    docker exec -it jenkins-lts bash
 }
 
 function start_jenkins() {
@@ -189,6 +190,7 @@ function start_jenkins() {
     # download_and_run_containers
     start_jenkins_container "$version"
 }
+
 
 # stop_jenkins_container function will stop a given container that user provides
 function stop_jenkins_container() {
