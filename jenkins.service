@@ -1,0 +1,25 @@
+[Unit]
+Description=Jenkins Container Service
+After=network-online.target podman.service
+Wants=network-online.target
+Requires=podman.service
+
+[Service]
+Type=forking
+User=jenkins
+Group=jenkins
+Environment="MACHINE_NAME=podman-machine-default"
+Environment="JENKINS_HOST=localhost"
+Environment="JENKINS_SSH_PORT=2233"
+Environment="JENKINS_USER=admin"
+Environment="JENKINS_KEY=/home/jenkins/.ssh/id_ed25519"
+ExecStartPre=/usr/bin/bash -c '/path/to/jenkins.sh start'
+ExecStart=/usr/bin/bash -c 'exit 0'
+ExecStop=/usr/bin/bash -c '/path/to/jenkins.sh stop'
+ExecReload=/usr/bin/bash -c '/path/to/jenkins.sh reload'
+RemainAfterExit=yes
+TimeoutStartSec=300
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target
