@@ -131,40 +131,6 @@ function download_and_run_containers() {
 
 }
 
-# Function to install plugins using jenkins-plugin-cli
-function run_docker_jenkins_blueocean() {
-    local jenkins_version=${1:-2.440.3}
-
-    # Check if jenkins-lts container is running
-    docker container ls | grep jenkins-lts 2>&1 > /dev/null
-    if [[ $? == 0 ]]; then
-        # Container is running, check version
-        current_version=$(docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
-        if [[ "$current_version" == "$jenkins_version" ]]; then
-            echo "Jenkins container version $jenkins_version is already running."
-            return 0
-        else
-            echo "Stopping Jenkins container with version $current_version to start version $jenkins_version..."
-            docker stop jenkins-lts
-        fi
-    fi
-
-    # download and run jenkins-lts
-    echo "Starting Jenkins container version $jenkins_version..."
-    docker container run --name jenkins-lts --rm --detach \
-        --userns=keep-id \
-        --network jenkins \
-        --env DOCKER_HOST=tcp://docker:2376 \
-        --env DOCKER_CERT_PATH=/certs/client \
-        --env DOCKER_TLS_VERIFY=1 \
-        --env JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
-        --volume jenkins-data:/var/jenkins_home \
-        --volume jenkins-docker-certs:/certs/client:ro \
-        -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d:z \
-        --publish 8080:8080 --publish 50000:50000 --publish 10022:10022 \
-          jenkins/jenkins:${jenkins_version}
-}
-
 function show_jenkins_init_admin_password() {
    docker logs jenkins-lts | grep -C 2 "Please use the following password"
 }
