@@ -209,6 +209,40 @@ function stop_jenkins_container() {
     docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
 }
 
+##############################################
+# Hot-reload Jenkins system & job config
+# Requires:
+#   • SSHD plugin enabled on <port> inside Jenkins
+#   • Public key for $JENKINS_USER uploaded in
+#     “Account ▸ Security ▸ SSH Public Keys”
+#   • The user has the Overall › Reload permission
+##############################################
+function reload_jenkins() {
+    local host="${JENKINS_HOST:-localhost}"
+    local port="${JENKINS_SSH_PORT:-2233}"
+    local user="${JENKINS_USER:-admin}"
+    local key="${JENKINS_KEY:-$HOME/.ssh/id_ed25519}"
+
+    # 1  Check that the SSHD port answers
+    nc -vzw3 "$port" "$host" &>/dev/null
+    if [[ $? == 0 ]]; then
+        echo "ERROR: SSHD port $port on host $host is not listening - return code $?"
+        return 1
+    fi
+
+    # 2  Invoke the Jenkins CLI ‘reload’ command via SSH
+    ssh -o BatchMode=yes \
+        -o StrictHostKeyChecking=no \
+        -p "$port" "${user}@${host}" reload-configuration
+
+    if [[ $? == 0 ]]; then
+        echo "Jenkins configuration reloaded successfully."
+    else
+        echo "ERROR: reload failed – check key, user permissions, or SSHD port."
+        exit -1
+    fi
+}
+
 # --- main ---
 
 case "$1" in
@@ -223,4 +257,8 @@ case "$1" in
         ;;
     into-container)
         in_jenkins_container
+         ;;
+    reload)
+       reload_jenkins
+         ;;
 esac
