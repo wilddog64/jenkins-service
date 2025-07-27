@@ -1,80 +1,69 @@
-Name:           jenkins-service
+Name:           jenkins-docker
 Version:        1.0
 Release:        1%{?dist}
-Summary:        Jenkins Service wrapper + custom RPM
+Summary:        Jenkins in Docker + RPM wrapper
+
 License:        MIT
 URL:            https://jenkins.io
 
-# Your source tarball excludes .git by design
+# single big tar + two small fragments
 Source0:        jenkins-dist-%{version}.tar.gz
-Source1:        plugins.txt
+Source1:        jenkins-sudoers
+Source2:        jenkins-docker.sysconfig
 
 BuildArch:      noarch
-Requires:       service, curl
+Requires:       docker
 
 %description
-Installs a Docker-based Jenkins service:
-• puts jenkins.sh in /usr/local/bin
-• drops /etc/systemd/system/jenkins.service
-• creates a 'jenkins' system user (no shell)
-• at build time, fetches plugins from updates.jenkins.io into
-  /var/lib/jenkins/plugins
-• excludes any .git directories from SOURCES
-• provides a basic %check to verify plugin files exist in the RPM
+• Installs your jenkins.sh and your unmodified jenkins.service
+• Creates a non-root 'jenkins' user in docker group
+• Drops plugins.txt into /etc/jenkins for in-container install
+• Grants that user passwordless reload/restart rights via sudoers
+• Optionally lets you override image and ports via sysconfig
 
 %prep
-# un-tar jenkins.sh, jenkins.service, plugins.txt (no .git here)
+# unpack your three files
 %setup -q -c -T
 tar xzf %{SOURCE0}
-# bring in the plugins list
-cp %{SOURCE1} .
 
 %build
-# no compilation
+# no build needed
 
 %install
-# 1) binaries & service unit
+# 1) control script
 install -d %{buildroot}/usr/local/bin
 install -m0755 jenkins.sh %{buildroot}/usr/local/bin/jenkins.sh
 
+# 2) systemd unit (exact copy)
 install -d %{buildroot}/etc/systemd/system
-install -m0644 jenkins.service %{buildroot}/etc/systemd/system/
+install -m0644 jenkins.service %{buildroot}/etc/systemd/system/jenkins.service
 
-# 2) jenkins data & plugin dir
-install -d %{buildroot}/var/lib/jenkins/plugins
+# 3) optional sysconfig
+install -d %{buildroot}/etc/sysconfig
+install -m0644 %{SOURCE2} %{buildroot}/etc/sysconfig/jenkins-docker
 
-# 3) download each plugin HPI
-while read -r line; do
-  # split by colon → name + optional version
-  IFS=: read -r name ver <<<"$line"
-  if [[ -n "$ver" ]]; then
-    url="https://updates.jenkins.io/download/plugins/${name}/${ver}/${name}.hpi"
-  else
-    url="https://updates.jenkins.io/latest/${name}.hpi"
-  fi
-  curl -sSL "$url" -o \
-    %{buildroot}/var/lib/jenkins/plugins/${name}.hpi
-done < plugins.txt
+# 4) plugin list for container
+install -d %{buildroot}/etc/jenkins
+install -m0644 plugins.txt %{buildroot}/etc/jenkins/plugins.txt
 
-# 4) ensure perms for Jenkins (runtime)
+# 5) sudoers fragment
+install -d %{buildroot}/etc/sudoers.d
+install -m0440 %{SOURCE1} %{buildroot}/etc/sudoers.d/jenkins
+
+# 6) data volume
 install -d %{buildroot}/var/lib/jenkins
-chmod 700   %{buildroot}/var/lib/jenkins
-chmod 600   %{buildroot}/var/lib/jenkins/plugins/*.hpi
+chmod 700 %{buildroot}/var/lib/jenkins
 
 %pre
-# create jenkins user & group if needed
+# create service account & add to docker group
 getent group jenkins >/dev/null || groupadd --system jenkins
 getent passwd jenkins >/dev/null || \
-  useradd --system --gid jenkins \
-          --home-dir /var/lib/jenkins \
+  useradd --system --gid jenkins --no-create-home \
           --shell /usr/sbin/nologin jenkins
-
-# add to docker group so service can start containers
 getent group docker >/dev/null || groupadd docker
 usermod -aG docker jenkins
 
 %post
-# enable & start via systemd
 %systemd_post jenkins.service
 
 %preun
@@ -83,27 +72,17 @@ usermod -aG docker jenkins
 %postun
 %systemd_postun_with_restart jenkins.service
 
-%check
-# sanity check: each plugin listed must be in the RPM
-cd %{buildroot}/var/lib/jenkins/plugins
-for line in $(cat %{SOURCE1}); do
-  name=${line%%:*}
-  test -f "${name}.hpi" || { echo "Missing plugin ${name}.hpi"; exit 1; }
-done
-
 %files
 %defattr(-,root,root,-)
-# your control scripts & unit
 /usr/local/bin/jenkins.sh
 /etc/systemd/system/jenkins.service
-
-# the data dir (owner at runtime is jenkins)
-%attr(0755,jenkins,jenkins) /var/lib/jenkins
-%attr(0755,jenkins,jenkins) /var/lib/jenkins/plugins
-%attr(0644,jenkins,jenkins) /var/lib/jenkins/plugins/*.hpi
+/etc/sysconfig/jenkins-docker
+/etc/jenkins/plugins.txt
+/etc/sudoers.d/jenkins
+%attr(0700,jenkins,jenkins) /var/lib/jenkins
 
 %changelog
-* Wed Jul 30 2025 You <you@example.com> - 1.0-1
-- Initial packaging of jenkins.sh & jenkins.service
-- Excluded .git, bundled plugins via plugins.txt, and added %check
+* Jul 30 2025 You <you@example.com> - 1.0-1
+- Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
+- Creates non-root jenkins user, docker group membership, sudoers for reload/restart
 
