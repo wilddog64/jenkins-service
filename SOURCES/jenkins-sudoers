@@ -1,0 +1,6 @@
+# /etc/sudoers.d/jenkins-svc
+jenkins ALL=(root) NOPASSWD: \
+    /usr/bin/systemctl reload jenkins.service, \
+    /usr/bin/systemctl restart jenkins.service, \
+    /usr/bin/systemctl status  jenkins.service
+

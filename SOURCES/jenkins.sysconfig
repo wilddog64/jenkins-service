@@ -1,0 +1,9 @@
+# /etc/sysconfig/jenkins-docker
+
+# Docker image to run for Jenkins (you can pin to a specific tag)
+VERSION=2.516.1
+
+# Host→container port mappings
+HTTP_PORT=8080
+SSH_PORT=50000
+
