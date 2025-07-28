@@ -9,10 +9,12 @@ URL:            https://jenkins.io
 # single big tar + two small fragments
 Source0:        jenkins-dist-%{version}.tar.gz
 Source1:        jenkins-sudoers
-Source2:        jenkins-docker.sysconfig
+Source2:        jenkins.sysconfig
 
 BuildArch:      noarch
 Requires:       docker
+
+%undefine _source_date_epoch_from_changelog 0
 
 %description
 • Installs your jenkins.sh and your unmodified jenkins.service
@@ -82,7 +84,7 @@ usermod -aG docker jenkins
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
 
 %changelog
-* Jul 30 2025 You <you@example.com> - 1.0-1
+* Jul 30 2025 You <ckm.liang@gmail.com> - 1.0-1
 - Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
 - Creates non-root jenkins user, docker group membership, sudoers for reload/restart
 
