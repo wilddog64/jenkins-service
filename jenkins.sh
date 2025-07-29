@@ -116,6 +116,8 @@ function start_jenkins_container() {
         --volume jenkins-data:/var/jenkins_home \
         --publish 8080:8080 --publish 50000:50000 \
         --publish 2233:2233 \
+        -v $(pwd):/mnt/workdir:Z \
+        -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
 }
