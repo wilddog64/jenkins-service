@@ -111,7 +111,7 @@ function start_jenkins_container() {
     fi
 
     echo "Starting Jenkins container version $jenkins_version..."
-    docker run --name jenkins-lts --rm --detach \
+    docker run -u jenkins --name jenkins-lts --rm --detach \
         --network jenkins \
         --volume jenkins-data:/var/jenkins_home \
         --publish 8080:8080 --publish 50000:50000 \
