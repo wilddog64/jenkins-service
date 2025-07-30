@@ -112,11 +112,13 @@ function start_jenkins_container() {
 
     echo "Starting Jenkins container version $jenkins_version..."
     docker run -u jenkins --name jenkins-lts --rm --detach \
+        -e JAVA_OPTS=-Djenkins.install.runSetupWizard=false \
         --network jenkins \
         --volume jenkins-data:/var/jenkins_home \
         --publish 8080:8080 --publish 50000:50000 \
         --publish 2233:2233 \
         -v $(pwd):/mnt/workdir:Z \
+        -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d \
         -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
