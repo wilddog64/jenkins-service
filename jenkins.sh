@@ -254,6 +254,10 @@ case "$1" in
     into-container)
         in_jenkins_container
          ;;
+    restart)
+        stop_jenkins_container
+        start_jenkins "${VERSION:-2.516.1}"
+         ;;
     reload)
        reload_jenkins
          ;;
