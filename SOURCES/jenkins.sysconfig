@@ -6,4 +6,5 @@ VERSION=2.516.1
 # Host→container port mappings
 HTTP_PORT=8080
 SSH_PORT=50000
+PLUGIN_FILE=/usr/share/jenkins/ref/plugins.txt
 
