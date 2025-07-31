@@ -2,7 +2,7 @@
 
 VERSION    := 1.0
 SOURCEDIR  := $(CURDIR)/SOURCES
-TARBALL    := $(SOURCEDIR)/jenkins-dist-$(VERSION).tar.gz
+TARBALL    := $(SOURCEDIR)/jenkins-service-$(VERSION).tar.gz
 SPEC       := SPECS/jenkins.spec
 
 .PHONY: all tarball rpm clean

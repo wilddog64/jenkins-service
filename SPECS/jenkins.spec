@@ -1,4 +1,4 @@
-Name:           jenkins-docker
+Name:           jenkins-service
 Version:        1.0
 Release:        2%{?dist}
 Summary:        Jenkins in Docker + RPM wrapper
@@ -47,7 +47,7 @@ install -m0644 jenkins.service %{buildroot}/etc/systemd/system/jenkins.service
 
 # 3) optional sysconfig
 install -d %{buildroot}/etc/sysconfig
-install -m0644 %{SOURCE2} %{buildroot}/etc/sysconfig/jenkins-docker
+install -m0644 %{SOURCE2} %{buildroot}/etc/sysconfig/jenkins.sysconfig
 
 # 4) plugin list for container
 install -d %{buildroot}/etc/jenkins
@@ -85,18 +85,18 @@ usermod -aG docker jenkins
 %config(noreplace) %{_sysconfdir}/sysconfig/jenkins
 /usr/local/bin/jenkins.sh
 /etc/systemd/system/jenkins.service
-/etc/sysconfig/jenkins-docker
+/etc/sysconfig/jenkins.sysconfig
 /etc/jenkins/plugins.txt
 /etc/sudoers.d/jenkins
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
-%attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins-docker
+%attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins
 
 %check
  # 1) Podman is present
  podman info --format '{{ .Host.OCIRuntime.Name }} {{ .Version.Version }}'
 
  # 2) sudoers entry parses cleanly
- visudo -cf %{buildroot}%{_sysconfdir}/sudoers.d/jenkins-docker
+ visudo -cf %{buildroot}%{_sysconfdir}/sudoers.d/jenkins
 
  # 3) Jenkins helper can start/stop container as 'jenkins' via sudo
  useradd -r -d /var/lib/jenkins jenkins 2>/dev/null || :

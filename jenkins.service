@@ -14,7 +14,7 @@ Environment="JENKINS_HOST=localhost"
 Environment="JENKINS_SSH_PORT=2233"
 Environment="JENKINS_USER=admin"
 EnvironmentFile=-/etc/sysconfig/jenkins
-+EnvironmentFile=-/etc/sysconfig/jenkins-docker
++EnvironmentFile=-/etc/sysconfig/jenkins.sysconfig
 +ExecStart=/usr/local/bin/jenkins.sh start
 +ExecStop=/usr/local/bin/jenkins.sh stop
 ExecRestart=/usr/bin/bash -c '/home/jenkins/jenkins-service/jenkins.sh restart'

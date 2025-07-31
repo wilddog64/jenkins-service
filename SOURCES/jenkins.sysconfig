@@ -1,4 +1,4 @@
-# /etc/sysconfig/jenkins-docker
+# /etc/sysconfig/jenkins.sysconfig
 
 # Docker image to run for Jenkins (you can pin to a specific tag)
 VERSION=2.516.1
