@@ -92,6 +92,31 @@ function start_docker_dind_container() {
     fi
 }
 
+
+function install_jenkins_plugins() {
+   jenkins_version=$1
+   echo ">>> install/update jenkins plugins"
+
+   if [[ -z $jenkins_version ]]; then
+      echo "jenkins version missing!"
+      exit -1
+   fi
+
+   PLUGIN_TEXT=$(pwd)/plugins.txt
+   PLUGIN_FILE=/usr/share/jenkins/ref/plugins.txt
+   docker run --rm -u jenkins \
+      -v "${PLUGIN_TEXT}:/usr/share/jenkins/ref/plugins.txt:Z" \
+      --volume jenkins-data:/var/jenkins_home:Z,U \
+      "jenkins:${jenkins_version}" \
+      jenkins-plugin-cli --plugin-file "${PLUGIN_FILE}" --latest --verbose --plugin-download-directory /var/jenkins_home/plugins
+   if [[ $? == 0 ]]; then
+      echo ">>> plugins install complete"
+   else
+      echo "warning: fail to install plugins"
+      exit -1
+   fi
+}
+
 # Function to start Jenkins container
 function start_jenkins_container() {
     local jenkins_version=${1:-2.440.3}
@@ -114,11 +139,11 @@ function start_jenkins_container() {
     docker run -u jenkins --name jenkins-lts --rm --detach \
         -e JAVA_OPTS=-Djenkins.install.runSetupWizard=false \
         --network jenkins \
-        --volume jenkins-data:/var/jenkins_home \
+        --volume jenkins-data:/var/jenkins_home:Z,U \
         --publish 8080:8080 --publish 50000:50000 \
         --publish 2233:2233 \
         -v $(pwd):/mnt/workdir:Z \
-        -v $(pwd)/init.groovy.d:/var/jenkins_home/init.groovy.d \
+        -v $(pwd)/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
         -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
@@ -158,6 +183,7 @@ function start_jenkins() {
 
     # download and run the containers
     # download_and_run_containers
+    install_jenkins_plugins "$version"
     start_jenkins_container "$version"
 }
 
