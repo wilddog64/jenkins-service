@@ -110,7 +110,7 @@ usermod -aG docker jenkins
  rm -f /etc/sudoers.d/jenkins-build
 
 %changelog
-* Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
+* Thu Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
 - Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
 - Creates non-root jenkins user, docker group membership, sudoers for reload/restart
 
