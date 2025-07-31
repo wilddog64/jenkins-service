@@ -6,15 +6,21 @@ import hudson.security.csrf.DefaultCrumbIssuer
 def instance = Jenkins.getInstanceOrNull()
 
 // Skip the setup wizard
-instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
+// instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
 
 // Configure local security realm and create admin user
 def hudsonRealm = new HudsonPrivateSecurityRealm(false)
 hudsonRealm.createAccount("admin", "20Admin25")   // username: admin, password: 20Admin25
 instance.setSecurityRealm(hudsonRealm)
 
-// Grant full control to logged-in users
-def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+// create admin user
+def realm = new HudsonPrivateSecurityRealm(false)
+realm.createAccount('admin', '20Admin25')
+instance.setSecurityRealm(realm)
+
+// matrix-based authorisation: only admin can log in
+def strategy = new GlobalMatrixAuthorizationStrategy()
+strategy.add(Jenkins.ADMINISTER, 'admin')
 instance.setAuthorizationStrategy(strategy)
 
 instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
