@@ -26,6 +26,15 @@ rpm: tarball
 	  --define "_sourcedir $(SOURCEDIR)" \
 	  -ba $(SPEC)
 
+smoketest: rpm
+	sudo dnf -y install ~/rpmbuild/RPMS/noarch/$(RPM)
+	sudo systemctl daemon-reload
+	sudo systemctl start jenkins.service
+	@echo "Waiting 15s for container…"
+	sleep 15
+	sudo podman ps | grep -q 'jenkins-lts' && echo "✓ smoke test OK" || \
+	  (echo "✗ container not running" && exit 1)
+
 clean:
 	@echo "→ Cleaning up"
 	@rm -f $(TARBALL)
