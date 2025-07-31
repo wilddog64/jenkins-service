@@ -6,7 +6,8 @@ Summary:        Jenkins in Docker + RPM wrapper
 License:        MIT
 URL:            https://github.com/wilddog64/jenkins-service
 Source0:        %{name}-%{version}.tar.gz
-Source1:        sudoers.jenkins
+Source1:        jenkins-sudoers
+Source2:        jenkins.sysconfig
 
 # ---- Runtime ----
 # Jenkins is started via podman; docker is an acceptable alternative
