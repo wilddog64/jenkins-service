@@ -10,7 +10,7 @@ def instance = Jenkins.getInstanceOrNull()
 
 // Configure local security realm and create admin user
 def hudsonRealm = new HudsonPrivateSecurityRealm(false)
-hudsonRealm.createAccount("admin", "20Admin25")   // username: admin, password: 20Admin25
+hudsonRealm.createAccount("admin", "---")   // username: admin, password: 20Admin25
 instance.setSecurityRealm(hudsonRealm)
 
 // create admin user
