@@ -8,13 +8,13 @@ URL:            https://github.com/wilddog64/jenkins-service
 Source0:        %{name}-%{version}.tar.gz
 Source1:        sudoers.jenkins
 
-# single big tar + two small fragments
-Source0:        jenkins-dist-%{version}.tar.gz
-Source1:        jenkins-sudoers
-Source2:        jenkins.sysconfig
 # ---- Runtime ----
 # Jenkins is started via podman; docker is an acceptable alternative
 Requires:       (podman or docker)
+
+# ---- Build-time smoke test ----
+BuildRequires:  podman
+Requires(pre):  shadow-utils # useradd / groupadd
 
 BuildArch:      noarch
 Requires:       docker
@@ -55,7 +55,8 @@ install -m0644 plugins.txt %{buildroot}/etc/jenkins/plugins.txt
 
 # 5) sudoers fragment
 install -d %{buildroot}/etc/sudoers.d
-install -m0440 %{SOURCE1} %{buildroot}/etc/sudoers.d/jenkins
+# install -m0440 %{SOURCE1} %{buildroot}/etc/sudoers.d/jenkins
+install -Dpm 440 %{SOURCE1} %{buildroot}%{_sysconfdir}/sudoers.d/jenkins
 
 # 6) data volume
 install -d %{buildroot}/var/lib/jenkins
@@ -81,15 +82,35 @@ usermod -aG docker jenkins
 
 %files
 %defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/sysconfig/jenkins
 /usr/local/bin/jenkins.sh
 /etc/systemd/system/jenkins.service
 /etc/sysconfig/jenkins-docker
 /etc/jenkins/plugins.txt
 /etc/sudoers.d/jenkins
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
+%attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins-docker
+
+%check
+ # 1) Podman is present
+ podman info --format '{{ .Host.OCIRuntime.Name }} {{ .Version.Version }}'
+
+ # 2) sudoers entry parses cleanly
+ visudo -cf %{buildroot}%{_sysconfdir}/sudoers.d/jenkins-docker
+
+ # 3) Jenkins helper can start/stop container as 'jenkins' via sudo
+ useradd -r -d /var/lib/jenkins jenkins 2>/dev/null || :
+ install -d -o jenkins -g jenkins /var/lib/jenkins
+ echo '%jenkins ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/jenkins-build  # temp
+ sudo -u jenkins %{buildroot}%{_bindir}/jenkins.sh start
+ sleep 3
+ podman ps | grep -q 'jenkins-lts'
+ sudo -u jenkins %{buildroot}%{_bindir}/jenkins.sh stop
+ podman ps -a | grep -v 'jenkins-lts'
+ rm -f /etc/sudoers.d/jenkins-build
 
 %changelog
-* Jul 30 2025 You <ckm.liang@gmail.com> - 1.0-1
+* Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
 - Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
 - Creates non-root jenkins user, docker group membership, sudoers for reload/restart
 
