@@ -243,22 +243,22 @@ function reload_jenkins() {
 
 case "$1" in
     start)
-        start_jenkins "${VERSION:-2.516.1}"
-        ;;
+       start_jenkins "${VERSION:-2.516.1}"
+       ;;
     stop)
-        stop_jenkins_container
-        ;;
+       stop_jenkins_container
+       ;;
     show-admin-passwd)
-        show_jenkins_init_admin_password
-        ;;
+       show_jenkins_init_admin_password
+       ;;
     into-container)
-        in_jenkins_container
-         ;;
+       in_jenkins_container
+       ;;
     restart)
-        stop_jenkins_container
-        start_jenkins "${VERSION:-2.516.1}"
-         ;;
+       stop_jenkins_container
+       start_jenkins "${VERSION:-2.516.1}"
+       ;;
     reload)
        reload_jenkins
-         ;;
+       ;;
 esac
