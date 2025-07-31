@@ -14,7 +14,7 @@ Requires:       (podman or docker)
 
 # ---- Build-time smoke test ----
 BuildRequires:  podman
-Requires(pre):  shadow-utils # useradd / groupadd
+Requires(pre):  shadow-utils
 
 BuildArch:      noarch
 Requires:       docker
