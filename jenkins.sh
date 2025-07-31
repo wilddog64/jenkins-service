@@ -108,7 +108,7 @@ function install_jenkins_plugins() {
       -v "${PLUGIN_TEXT}:/usr/share/jenkins/ref/plugins.txt:Z" \
       --volume jenkins-data:/var/jenkins_home:Z,U \
       "jenkins:${jenkins_version}" \
-      jenkins-plugin-cli --plugin-file "${PLUGIN_FILE}" --latest --verbose --plugin-download-directory /var/jenkins_home/plugins
+      jenkins-plugin-cli --plugin-file "${PLUGIN_FILE}" --verbose --plugin-download-directory /var/jenkins_home/plugins
    if [[ $? == 0 ]]; then
       echo ">>> plugins install complete"
    else
