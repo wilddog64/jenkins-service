@@ -90,6 +90,25 @@ chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || :
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
 %attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins-sudoers
 
+%preun
+# $1 == 0  →  this is the final erase, not an upgrade
+if [ "$1" -eq 0 ] ; then
+    systemctl --quiet stop jenkins.service || :
+    systemctl --quiet disable jenkins.service || :
+fi
+
+%postun
+# final erase → clean leftovers
+if [ "$1" -eq 0 ] ; then
+    # remove empty home if admin wants a clean slate
+    rmdir --ignore-fail-on-non-empty /var/lib/jenkins 2>/dev/null || :
+    # delete account only if it was ours and no files remain
+    getent passwd jenkins >/dev/null && \
+        userdel -r jenkins 2>/dev/null || :
+    getent group  jenkins >/dev/null && \
+        groupdel jenkins 2>/dev/null || :
+fi
+
 %check
  # 1) Podman is present
  podman info --format '{{ .Host.OCIRuntime.Name }} {{ .Version.Version }}'
