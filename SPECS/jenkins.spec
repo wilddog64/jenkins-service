@@ -122,6 +122,15 @@ fi
  # sudo -u jenkins %{buildroot}%{_bindir}/jenkins.sh stop
  podman ps -a | grep -v 'jenkins-lts'
 
+ # plugin compability test
+ podman run --rm \
+  -v %{_sourcedir}/plugins.txt:/tmp/plugins.txt:Z \
+  jenkins/jenkins:%{jenkins_tag} \
+  jenkins-plugin-cli --plugin-file /tmp/plugins.txt \
+                     --jenkins-version %{jenkins_tag%%-*} \
+                     --jenkins-version %{jenkins_tag} \
+                     --latest --no-download --verbose
+
 %changelog
 * Thu Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
 - Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
