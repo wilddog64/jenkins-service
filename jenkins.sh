@@ -95,6 +95,7 @@ function start_docker_dind_container() {
 
 # new
 : "${PLUGIN_FILE=/usr/share/jenkins/ref/plugins.txt}"
+: "${JENKINS_TAG:=%{jenkins_tag}}"
 
 function install_jenkins_plugins() {
    jenkins_version=$1
@@ -185,8 +186,8 @@ function start_jenkins() {
 
     # download and run the containers
     # download_and_run_containers
-    install_jenkins_plugins "$version"
-    start_jenkins_container "$version"
+    install_jenkins_plugins "${JENKINS_TAG}"
+    start_jenkins_container "${JENKINS_TAG}"
 }
 
 

@@ -1,8 +1,8 @@
 # Makefile
 
-VERSION    := 1.0
+JENKINS_TAG ?= 2.516.1
 SOURCEDIR  := $(CURDIR)/SOURCES
-TARBALL    := $(SOURCEDIR)/jenkins-service-$(VERSION).tar.gz
+TARBALL    := $(SOURCEDIR)/jenkins-service-$(JENKINS_TAG).tar.gz
 SPEC       := SPECS/jenkins.spec
 
 .PHONY: all tarball rpm clean
@@ -18,6 +18,7 @@ $(TARBALL): jenkins.sh jenkins.service plugins.txt | $(SOURCEDIR)
 
 $(SOURCEDIR):
 	@mkdir -p $@
+
 
 ## 2) Build the RPM, pointing rpmbuild at our SOURCES dir
 rpm: tarball

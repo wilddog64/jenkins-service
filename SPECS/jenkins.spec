@@ -1,11 +1,12 @@
+%global jenkins_tag 2.516.1
 Name:           jenkins-service
-Version:        1.0
+Version:        %{jenkins_tag}
 Release:        2%{?dist}
 Summary:        Jenkins in Docker + RPM wrapper
 
 License:        MIT
 URL:            https://github.com/wilddog64/jenkins-service
-Source0:        %{name}-%{version}.tar.gz
+Source0:        %{name}-%{jenkins_tag}.tar.gz
 Source1:        jenkins-sudoers
 Source2:        jenkins.sysconfig
 
@@ -75,10 +76,10 @@ install -d %{buildroot}%{_localstatedir}/lib/jenkins
 chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || :
 %systemd_post jenkins.service
 
-%preun
+%prerun
 %systemd_preun jenkins.service
 
-%postun
+%postrun
 %systemd_postun_with_restart jenkins.service
 
 %files
