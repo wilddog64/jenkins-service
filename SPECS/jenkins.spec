@@ -129,7 +129,25 @@ fi
   jenkins-plugin-cli --plugin-file /tmp/plugins.txt \
                      --jenkins-version %{jenkins_tag%%-*} \
                      --jenkins-version %{jenkins_tag} \
-                     --latest --no-download --verbose
+                     --latest --no-download --verbose || exit -1
+
+  # Expect *failure* when we feed an obviously incompatible list
+  cat > /tmp/plugins-fail.txt<<-'EOL'
+  github-branch-source:1834.v857721ea_74c6
+EOL
+
+  podman run --rm \
+    -v %{_sourcedir}/plugin-fail.txt:/tmp/plugin-fail.txt:Z \
+    jenkins/jenkins:%{jenkins_tag} \
+    jenkins-plugin-cli --plugin-file /tmp/plugin-fail.txt \
+                       --jenkins-version %{jenkins_tag%%-*} \
+                       --jenkins-version %{jenkins_tag} \
+                       --latest --no-download --verbose \
+    --plugin-file /tmp/plugin-fail.txt || {
+      exit 0
+  }
+  echo "ERROR: imcompablity check did not trigger"
+  exit -1
 
 %changelog
 * Thu Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
