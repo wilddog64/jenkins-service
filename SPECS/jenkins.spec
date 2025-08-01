@@ -64,6 +64,8 @@ install -m0644 %{SOURCE2} %{buildroot}/etc/sysconfig/jenkins.sysconfig
 install -d %{buildroot}/etc/jenkins
 install -m0644 plugins.txt %{buildroot}/etc/jenkins/plugins.txt
 
+# create /var/lib/jenkins directory
+install -d %{buildroot}%{_localstatedir}/lib/jenkins
 # 5) sudoers fragment
 # getent group docker >/dev/null || groupadd docker
 # usermod -aG docker jenkins
