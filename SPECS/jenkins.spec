@@ -66,6 +66,7 @@ install -m0644 plugins.txt %{buildroot}/etc/jenkins/plugins.txt
 
 # create /var/lib/jenkins directory
 install -d %{buildroot}%{_localstatedir}/lib/jenkins
+
 # 5) sudoers fragment
 # getent group docker >/dev/null || groupadd docker
 # usermod -aG docker jenkins
@@ -86,7 +87,6 @@ chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || :
 /etc/systemd/system/jenkins.service
 /etc/sysconfig/jenkins.sysconfig
 /etc/jenkins/plugins.txt
-/etc/sudoers.d/jenkins-sudoers
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
 %attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins-sudoers
 
@@ -106,4 +106,3 @@ chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || :
 * Thu Jul 31 2025 You <ckm.liang@gmail.com> - 1.0-1
 - Initial RPM: packages jenkins.sh, jenkins.service (untouched), plugins.txt
 - Creates non-root jenkins user, docker group membership, sudoers for reload/restart
-
