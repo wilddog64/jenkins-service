@@ -12,9 +12,9 @@ all: rpm
 ## 1) Create the tarball of your three source files
 tarball: $(TARBALL)
 
-$(TARBALL): jenkins.sh jenkins.service plugins.txt | $(SOURCEDIR)
+$(TARBALL): jenkins.sh jenkins.service $(SOURCEDIR)/plugins.txt | $(SOURCEDIR)
 	@echo "→ Packing $$@"
-	tar czf $@ --exclude='.git' jenkins.sh jenkins.service plugins.txt
+	tar czf $@ --exclude='.git' jenkins.sh jenkins.service $(SOURCEDIR)/plugins.txt
 
 $(SOURCEDIR):
 	@mkdir -p $@
@@ -33,7 +33,7 @@ smoketest: rpm
 	sudo systemctl start jenkins.service
 	@echo "Waiting 15s for container…"
 	sleep 15
-	sudo podman ps | grep -q 'jenkins-lts' && echo "✓ smoke test OK" || \
+	sudo podman ps | grep -q $(JENKINS_TAG) && echo "✓ smoke test OK" || \
 	  (echo "✗ container not running" && exit 1)
 
 clean:

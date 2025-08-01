@@ -9,6 +9,7 @@ URL:            https://github.com/wilddog64/jenkins-service
 Source0:        %{name}-%{jenkins_tag}.tar.gz
 Source1:        jenkins-sudoers
 Source2:        jenkins.sysconfig
+Source3:        plugins.txt
 
 # ---- Runtime ----
 # Jenkins is started via podman; docker is an acceptable alternative
@@ -63,7 +64,7 @@ install -m0644 %{SOURCE2} %{buildroot}/etc/sysconfig/jenkins.sysconfig
 
 # 4) plugin list for container
 install -d %{buildroot}/etc/jenkins
-install -m0644 plugins.txt %{buildroot}/etc/jenkins/plugins.txt
+install -m0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/jenkins/plugins.txt
 
 # create /var/lib/jenkins directory
 install -d %{buildroot}%{_localstatedir}/lib/jenkins
@@ -90,6 +91,7 @@ chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || :
 /etc/jenkins/plugins.txt
 %attr(0700,jenkins,jenkins) /var/lib/jenkins
 %attr(0440,root,root) %config(noreplace) %{_sysconfdir}/sudoers.d/jenkins-sudoers
+%attr(0440,root,root) %config(noreplace) %{_sysconfdir}/jenkins/plugins.txt
 
 %preun
 # $1 == 0  →  this is the final erase, not an upgrade

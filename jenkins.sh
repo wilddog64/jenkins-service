@@ -95,6 +95,7 @@ function start_docker_dind_container() {
 
 # new
 : "${PLUGIN_FILE=/usr/share/jenkins/ref/plugins.txt}"
+: "${PLUGIN_TEXT=$(pwd)/SOURCES/plugins.txt}"
 
 function install_jenkins_plugins() {
    jenkins_version=$1
@@ -105,7 +106,6 @@ function install_jenkins_plugins() {
       exit -1
    fi
 
-   PLUGIN_TEXT=$(pwd)/plugins.txt
    docker run --rm -u jenkins \
       -v "${PLUGIN_TEXT}:/usr/share/jenkins/ref/plugins.txt:Z" \
       --volume jenkins-data:/var/jenkins_home:Z,U \
