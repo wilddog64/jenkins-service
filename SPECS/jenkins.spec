@@ -139,13 +139,13 @@ fi
 EOL
 
   podman run --rm \
-    -v %{_sourcedir}/plugin-fail.txt:/tmp/plugin-fail.txt:Z \
-    jenkins/jenkins:%{jenkins_tag} \
-    jenkins-plugin-cli --plugin-file /tmp/plugin-fail.txt \
+    -v %{_sourcedir}/plugins-txt:/tmp/plugins.txt:Z \
+    jenkins/jenkins:2.346.1 \
+    jenkins-plugin-cli --plugin-file /tmp/plugins.txt \
                        --jenkins-version %{jenkins_tag%%-*} \
                        --jenkins-version %{jenkins_tag} \
                        --latest --no-download --verbose \
-    --plugin-file /tmp/plugin-fail.txt || {
+    --plugin-file /tmp/plugins.txt || {
       exit 0
   }
   echo "ERROR: imcompablity check did not trigger"
