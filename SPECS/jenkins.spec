@@ -19,7 +19,7 @@ BuildRequires:  podman
 Requires(pre):  shadow-utils
 
 BuildArch:      noarch
-Requires:       docker
+Requires:       podman
 
 %undefine _source_date_epoch_from_changelog 0
 
