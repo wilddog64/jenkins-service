@@ -12,11 +12,9 @@ def v: gsub("[^0-9\\.]";"") | split(".") | map(tonumber);
     ((.value.requiredCore|v) <= ($core|v))               # ≤ core
   ))
 | sort_by(.key | v)
-| (last?) as $sel                                          # ← pipe *included*
+| (last?) as $sel
 | if $sel
-    then "\($id):\($sel.key) # \(
-             $sel.value.releaseTimestamp/1000
-             | strftime(\"%Y-%m-%d\")
-         )"
-    else empty
+    then "\($id):\($sel.key) # \($sel.value.releaseTimestamp/1000 | strftime("%Y-%m-%d"))"
+    else "\($id)\t\t"
   end
+
