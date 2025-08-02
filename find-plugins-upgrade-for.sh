@@ -1,56 +1,51 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# if [ $# -lt 2 ]; then
-#   echo "Usage: $0 <jenkins-core> <plugins.txt>" >&2
-#   exit 1
-# fi
+##############################################################################
+# Usage:   ./find-plugins-upgrade.sh 2.346.1 plugins.txt
+#
+#   1st arg  = your running Jenkins core
+#   2nd arg  = file with plugin IDs (one per line, "#…" comments allowed)
+#
+# Output:   install.list   (and echoed to console via tee)
+##############################################################################
 
-CORE="${1:-2.346.1}"                # e.g. 2.346.1
-PLUGINS="${2:-SOURCES/plugins.txt}" # one plugin ID per line, comments OK
-CATALOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/jenkins-catalog"
-CATALOG="$CATALOG_DIR/plugin-versions.json"
-URL="https://updates.jenkins.io/current/plugin-versions.json.gz"
-
-mkdir -p "$CATALOG_DIR"
-if ! jq -e . "$CATALOG" &>/dev/null; then
-  echo "⇣ Downloading plugin-versions.json…" >&2
-  curl -fsSL "$URL" | gunzip > "$CATALOG"
-  jq -e . "$CATALOG" &>/dev/null || { echo "✘ corrupt catalog"; exit 1; }
+if [[ $# == 'help' ]]; then
+  echo "Usage: $0 <jenkins-core> <plugins-file>" >&2
+  exit 1
 fi
 
-echo "▸ Picking the newest plugin versions compatible with Jenkins $CORE" >&2
+CORE="${1:-2.346.1}"
+LIST="${2:-SOURCES/plugins.txt}"
+OUT="install.list"
 
-printf '# Compatible plugin versions for Jenkins %s\n' "$CORE" > install.list
+# ── download / cache full catalogue once ────────────────────────────────────
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/jenkins-catalog"
+CATALOG="$CACHE/plugin-versions.json"
+URL="https://updates.jenkins.io/current/plugin-versions.json.gz"
 
+mkdir -p "$CACHE"
+if ! jq -e . "$CATALOG" &>/dev/null; then
+  echo "⇣  downloading plugin catalogue…" >&2
+  curl -fsSL "$URL" | gunzip > "$CATALOG"
+  jq -e . "$CATALOG" &>/dev/null || { echo "✘ corrupt catalogue"; exit 1; }
+fi
+
+echo "▸ Calculating newest plugin versions compatible with Jenkins $CORE"
+
+> "$OUT"   # truncate
 while IFS= read -r raw; do
-  line="${raw%%#*}"             # strip comments
-  line="${line//[[:space:]]/}"  # trim whitespace
-  [[ -z $line ]] && continue
+  # clean input line (remove comments & whitespace)
+  id="${raw%%#*}"
+  id="${id//[[:space:]]/}"
+  [[ -z $id ]] && continue
 
-  id="$line"
-  vers=$(jq -r --arg id "$id" --arg core "$CORE" --slurpfile pv "$CATALOG" '
-    def v: split(".")|map(tonumber);
-
-    # list all numeric versions whose requiredCore ≤ core
-    ($pv[0].plugins[$id] // {})
-    | to_entries
-    | map(select(
-        (.key|test("^[0-9]+([.][0-9]+)*$")) and
-        (.value.requiredCore|v) <= ($core|v)
-      ))
-    | sort_by(.key|v)
-    | last?                         # pick the newest compatible
-    | .key // ""                   # output the version string or "" if none
-  ')
-
-  if [[ -z $vers ]]; then
-    echo "⚠️  $id: no compatible version found for Jenkins $CORE" >&2
-  else
-    echo "${id}:${vers}" >> install.list
-  fi
-done < "$PLUGINS"
+  jq -n -r \
+     --slurpfile pv "$CATALOG" \
+     --arg id "$id" \
+     --arg core "$CORE" \
+     -f compat.jq
+done < "$LIST" | tee "$OUT"
 
 echo
-echo "✓  install.list generated—each line is the newest version your core can run."
-echo "   $(wc -l < install.list) plugins listed."
+echo "✓  Saved compatible list to $OUT"
