@@ -26,21 +26,24 @@ core="${1:-2.346.1}"
 echo "▸ Checking plugin list against Jenkins $core" >&2
 
 while read -r id; do
+  id=$(sed 's/#.*//' <<<"$id" | xargs)    # trim & skip comments / blanks
+  [[ -z $id ]] && continue
+
   jq -r --arg id "$id" '
-    # helper:  "2.361.4" → [2,361,4]  so sort_by() is semantic
     def verArr: split(".") | map(tonumber);
 
-    .plugins[$id]?                       # object for this plugin (or null)
-    | to_entries                         # → [{key, value}, …]
-    | map(select(.key                    # keep only numeric keys 1.2.3
-          | test("^[0-9]+(\\.[0-9]+)*$")))
-    | sort_by(.key | verArr)             # oldest → newest
-    | last?                              # newest numeric version (or null)
+    .plugins[$id]?                            # plugin map or null
+    | to_entries
+    | map(select(.key|test("^[0-9]+(\\.[0-9]+)*$")))   # numeric-ish keys
+    | sort_by(.key|verArr) | last?                     # newest numeric or null
 
-    | if . == null                       # none found?
-         then "\($id)\tNO_NUMERIC_VERSION"
-         else "\($id)\t\(.key)\t\(.value.requiredCore)"
+    # ------------------------------------------------------------------
+    # If we found a numeric version →  "id:version"
+    # otherwise just "id"  (let the CLI install whatever is latest)
+    # ------------------------------------------------------------------
+    | if . == null
+         then $id
+         else "\($id):\(.key)"
        end
   ' "$HOME/.cache/jenkins-catalog/plugin-versions.json"
 done < SOURCES/plugins.txt
-
