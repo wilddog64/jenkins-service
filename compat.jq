@@ -25,7 +25,7 @@ def toDate($ts):
 | sort_by(.key | v)
 | (last?) as $sel
 | if $sel then
-    "\($id):\($sel.key) # \(toDate($sel.value.releaseTimestamp))"
+    "\($id):\($sel.key) # Jenkins core: \($sel.value.requiredCore), plugin release date: \(toDate($sel.value.releaseTimestamp))"
   else empty
   end
 
