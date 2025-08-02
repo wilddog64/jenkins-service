@@ -2,19 +2,25 @@
 # Needs:  --slurpfile pv plugin-versions.json
 #         --arg id   <pluginId>
 #         --arg core <jenkinsCore>
-
 def v: gsub("[^0-9\\.]";"") | split(".") | map(tonumber);
 
-($pv[0].plugins[$id] // {})        # full map for this plugin
+# helper: epoch-ms OR ISO string  →  YYYY-MM-DD
+def toDate($ts):
+  if ($ts|type) == "number"
+     then ($ts / 1000 | strftime("%Y-%m-%d"))
+     else ($ts | fromdateiso8601 | strftime("%Y-%m-%d"))
+  end;
+
+($pv[0].plugins[$id] // {})
 | to_entries
 | map(select(
-    (.key | test("^[0-9]+([.][0-9]+)*$")) and            # numeric key
-    ((.value.requiredCore|v) <= ($core|v))               # ≤ core
+    (.key | test("^[0-9]+([.][0-9]+)*$"))
+    and ((.value.requiredCore|v) <= ($core|v))
   ))
 | sort_by(.key | v)
 | (last?) as $sel
-| if $sel
-    then "\($id):\($sel.key) # \($sel.value.releaseTimestamp/1000 | strftime("%Y-%m-%d"))"
-    else "\($id)\t\t"
+| if $sel then
+    "\($id):\($sel.key) # \(toDate($sel.value.releaseTimestamp))"
+  else empty
   end
 
