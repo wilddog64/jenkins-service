@@ -4,6 +4,7 @@ JENKINS_TAG ?= 2.516.1
 SOURCEDIR  := $(CURDIR)/SOURCES
 TARBALL    := $(SOURCEDIR)/jenkins-service-$(JENKINS_TAG).tar.gz
 SPEC       := SPECS/jenkins.spec
+PLUGINS_LIST := $(SOURCEDIR)/plugins.txt
 
 .PHONY: all tarball rpm clean
 
@@ -21,6 +22,9 @@ $(SOURCEDIR):
 
 require-corejenkins-for-plugins:
 	@generate-jenkins-plugins-installlist.sh $(JENKINS_TAG)
+
+find-plugins-upgrade-for:
+	@find-plugins-upgrade-for.sh $(JENKINS_TAG) $(PLUGINS_LIST)
 
 ## 2) Build the RPM, pointing rpmbuild at our SOURCES dir
 rpm: tarball
