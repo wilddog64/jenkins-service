@@ -5,10 +5,15 @@
 def v: gsub("[^0-9\\.]";"") | split(".") | map(tonumber);
 
 # helper: epoch-ms OR ISO string  →  YYYY-MM-DD
+# helper: epoch-ms **or** ISO string  →  YYYY-MM-DD
 def toDate($ts):
-  if ($ts|type) == "number"
-     then ($ts / 1000 | strftime("%Y-%m-%d"))
-     else ($ts | fromdateiso8601 | strftime("%Y-%m-%d"))
+  if ($ts|type) == "number"                          # old epoch-ms style
+     then ($ts/1000 | strftime("%Y-%m-%d"))
+  else                                               # ISO string
+     ($ts
+      | gsub("\\.[0-9]+Z$"; "Z")                     # drop .123 or .123Z
+      | fromdateiso8601
+      | strftime("%Y-%m-%d"))
   end;
 
 ($pv[0].plugins[$id] // {})
