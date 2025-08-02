@@ -25,7 +25,7 @@ while IFS= read -r raw; do
 
   jq -r --arg id "$id" '
     def v: split(".")|map(tonumber);
-    .plugins[$id] // {} 
+    .plugins[$id] // {}
     | to_entries
     | map(select(.key|test("^[0-9]+(\\.[0-9]+)*$")))
     | sort_by(.key | v)
