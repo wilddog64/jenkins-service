@@ -119,6 +119,7 @@ function install_jenkins_plugins() {
    fi
 }
 
+: "${ADMIN_SSH_KEY_PATH:=/run/secrets/jenkins_admin_ssh_key.pub}"
 # Function to start Jenkins container
 function start_jenkins_container() {
     local jenkins_version=${1:-2.440.3}
@@ -146,6 +147,7 @@ function start_jenkins_container() {
         --publish 2233:2233 \
         -v $(pwd):/mnt/workdir:Z \
         -v $(pwd)/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
+        -v "$ADMIN_SSH_KEY_PATH:$ADMIN_SSH_KEY_PATH:Z" \
         -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
