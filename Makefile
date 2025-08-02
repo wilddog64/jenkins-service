@@ -19,6 +19,8 @@ $(TARBALL): jenkins.sh jenkins.service $(SOURCEDIR)/plugins.txt | $(SOURCEDIR)
 $(SOURCEDIR):
 	@mkdir -p $@
 
+require-corejenkins-for-plugins:
+	@generate-jenkins-plugins-installlist.sh $(JENKINS_TAG)
 
 ## 2) Build the RPM, pointing rpmbuild at our SOURCES dir
 rpm: tarball
