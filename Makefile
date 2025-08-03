@@ -5,6 +5,10 @@ SOURCEDIR  := $(CURDIR)/SOURCES
 TARBALL    := $(SOURCEDIR)/jenkins-service-$(JENKINS_TAG).tar.gz
 SPEC       := SPECS/jenkins.spec
 PLUGINS_LIST := $(SOURCEDIR)/plugins.txt
+# config at top, same as above
+SSH_USER   := admin
+SSH_HOST   := localhost
+SSH_PORT   := 2233
 
 .PHONY: all tarball rpm clean
 
@@ -42,7 +46,17 @@ smoketest: rpm
 	sudo podman ps | grep -q $(JENKINS_TAG) && echo "✓ smoke test OK" || \
 	  (echo "✗ container not running" && exit 1)
 
+jenkins-cli:
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ]; then \
+		echo "Usage: make jenkins-cli <jenkins-cli args…>"; \
+		exit 1; \
+	fi; \
+	ssh -p $(SSH_PORT) $(SSH_USER)@$(SSH_HOST) $$args
+
 clean:
 	@echo "→ Cleaning up"
 	@rm -f $(TARBALL)
 
+%::
+	@:
