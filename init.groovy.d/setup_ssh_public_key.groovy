@@ -30,11 +30,6 @@ if (!keyFile.exists() || !keyFile.canRead()) {
     println "WARNING: SSH public key not found at ${keyPath}; skipping injection"
 } else {
     def pubKey = keyFile.text.trim()
-    // remove old key props so we don’t duplicate on restart
-    admin.getAllProperties()
-         .findAll { it instanceof UserPropertyImpl }
-         .each  { admin.removeProperty(it) }
-
     admin.addProperty(new UserPropertyImpl(pubKey))
     admin.save()
     println ">>> Injected SSH public key for 'admin' from ${keyPath}"
