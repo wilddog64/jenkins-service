@@ -16,9 +16,31 @@ if (!(realm instanceof HudsonPrivateSecurityRealm)) {
     instance.setSecurityRealm(realm)
 }
 
-def adminPwd = System.getenv('ADMIN_PASS') ?: 'changeMe!'
-def adminUser = realm.getUser('admin') ?: realm.createAccount('admin', adminPwd)
 // aminUser.setPassword(adminPwd)
+// 1. define where your Docker-mounted secret will live
+def secretPath = '/run/secrets/ADMIN_PASS'
+
+// 2. pick up the password:
+//    – if the secret file exists, read it
+//    – otherwise fall back to the ENV var
+def adminPwd = null
+def secretFile = new File(secretPath)
+if ( secretFile.exists() && secretFile.canRead() ) {
+    adminPwd = secretFile.text.trim()
+    println "ℹ️  Loaded admin password from secret file (${secretPath})"
+}
+else if ( System.getenv('ADMIN_PASS') ) {
+    adminPwd = System.getenv('ADMIN_PASS').trim()
+    println "ℹ️  Loaded admin password from ENV var"
+}
+else {
+    throw new IllegalStateException(
+        "⚠️  No admin password found: neither ${secretPath} nor ENV[ADMIN_PASS] is set"
+    )
+}
+
+// create admin account
+def adminUser = realm.getUser('admin') ?: realm.createAccount('admin', adminPwd)
 adminUser.save()
 
 // ── 2) CRUMB ISSUER (optional, but often wanted) ───────────────────────

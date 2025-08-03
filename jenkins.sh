@@ -149,6 +149,7 @@ function start_jenkins_container() {
         -v $(pwd):/mnt/workdir:Z \
         -v $(pwd)/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
         -v "$SSH_KEY_PATH:$ADMIN_SSH_KEY_PATH:Z" \
+        -v $(pwd)/SOURCES/secret.txt:/var/run/secrets/ADMIN_PASS:Z,ro \
         -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
     echo "Jenkins container started. Access it at http://localhost:8080"
