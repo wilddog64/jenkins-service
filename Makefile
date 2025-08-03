@@ -54,6 +54,13 @@ jenkins-cli:
 	fi; \
 	ssh -p $(SSH_PORT) $(SSH_USER)@$(SSH_HOST) $$args
 
+stop-jenkins:
+	@jenkins.sh stop
+
+cleanup-jenkins: stop-jenkins
+	@podman volume ls -q | grep jenkins | xargs -I % podman volume rm %
+	@podman network rm jenkins
+
 clean:
 	@echo "→ Cleaning up"
 	@rm -f $(TARBALL)
