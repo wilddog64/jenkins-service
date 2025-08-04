@@ -106,11 +106,17 @@ function install_jenkins_plugins() {
       exit -1
    fi
 
+   jenkins_core="${jenkins_version%%-*}"
+   update_center_url="https://updates.jenkins.io/update-center.actual.json?version=${jenkins_core}"
    docker run --rm -u jenkins \
       -v "${PLUGIN_TEXT}:/usr/share/jenkins/ref/plugins.txt:Z" \
       --volume jenkins-data:/var/jenkins_home:Z,U \
-      "jenkins:${jenkins_version}" \
-      jenkins-plugin-cli --plugin-file "${PLUGIN_FILE}" --verbose --plugin-download-directory /var/jenkins_home/plugins
+      "jenkins/jenkins:${jenkins_version}" \
+      jenkins-plugin-cli --plugin-file "${PLUGIN_FILE}" \
+        --verbose \
+        --jenkins-update-center "${update_center_url}" \
+        --latest false \
+        --plugin-download-directory /var/jenkins_home/plugins
    if [[ $? == 0 ]]; then
       echo ">>> plugins install complete"
    else
