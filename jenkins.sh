@@ -214,11 +214,11 @@ function stop_jenkins_container() {
 
 function stop_jenkins_container() {
     # stop_jenkins_container dind
-    docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
-}
+    # docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
+    ids=$(docker ps -a --filter name=jenkins -q)
+    [[ -n $ids ]] && docker stop $ids
+ }
 
-##############################################
-# Hot-reload Jenkins system & job config
 # Requires:
 #   • SSHD plugin enabled on <port> inside Jenkins
 #   • Public key for $JENKINS_USER uploaded in
