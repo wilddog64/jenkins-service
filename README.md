@@ -18,6 +18,7 @@ A self‑contained toolkit for running **Jenkins** in a root‑less container on
 jenkins-service/
 ├── jenkins.service                 # systemd unit – drop into /etc/systemd/system
 ├── jenkins.sh                      # helper script: detects Podman/Docker & launches
+├── Makefile                        # convenience targets (tarball, plugin diff, etc.)
 ├── jenkins-cli.jar                 # upstream CLI client (matches default TAG)
 ├── SOURCES/
 │   ├── jenkins.sysconfig           # Environment overrides sourced by the unit
@@ -30,6 +31,7 @@ jenkins-service/
 ├── resolve-plugin-versions.sh
 ├── minimalJenkinsCore.sh           # jq pipeline → minimal core + plugins
 ├── minimal-core.jq                 # jq filter used by the script above
+├── compat.jq                       # jq filter for plugin‑compat matrix
 ├── find-plugins-upgrade-for.sh     # diff your current catalogue vs latest
 ├── LICENSE (MIT)
 └── …
