@@ -130,6 +130,8 @@ function install_jenkins_plugins() {
 # Function to start Jenkins container
 function start_jenkins_container() {
     local jenkins_version=${1:-2.440.3}
+    local jenkins_admin_ssh_key_path=${ADMIN_SSH_KEY_PATH}
+    local jenkins_key_path=${SSH_KEY_PATH}
 
     # Check if jenkins-lts container is running
     docker ps | grep -q jenkins-lts
@@ -154,7 +156,7 @@ function start_jenkins_container() {
         --publish 2233:2233 \
         -v $(pwd):/mnt/workdir:Z \
         -v $(pwd)/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
-        -v "$SSH_KEY_PATH:$ADMIN_SSH_KEY_PATH:Z" \
+        -v "$jenkins_key_path:$jenkins_admin_ssh_key_path:Z" \
         -v $(pwd)/SOURCES/secret.txt:/var/run/secrets/ADMIN_PASS:Z,ro \
         -w /mnt/workdir \
         jenkins/jenkins:${jenkins_version}
