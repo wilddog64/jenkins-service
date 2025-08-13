@@ -254,10 +254,10 @@ function reload_jenkins() {
 }
 
 # --- main ---
-
+VERSION=${2:-2.516.1}
 case "$1" in
     start)
-       start_jenkins "${VERSION:-2.516.1}"
+       start_jenkins "${VERSION}"
        ;;
     stop)
        stop_jenkins_container
