@@ -1,0 +1,20 @@
+[Unit]
+Description=Jenkins Service (Docker-based)
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=jenkins
+WorkingDirectory=/home/jenkins/docker/jenkins-service
+ExecStart=/bin/bash /home/jenkins/docker/jenkins-service/jenkins.sh start 2.516.1
+ExecStop=/bin/bash /home/jenkins/docker/jenkins-service/jenkins.sh stop
+ExecReload=/bin/bash /home/jenkins/docker/jenkins-service/jenkins.sh reload
+Restart=no
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+StandardOutput=append:/var/log/jenkins-service.log
+StandardError=append:/var/log/jenkins-service-error.log
+
+[Install]
+WantedBy=multi-user.target
