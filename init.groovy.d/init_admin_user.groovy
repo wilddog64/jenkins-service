@@ -27,15 +27,15 @@ def adminPwd = null
 def secretFile = new File(secretPath)
 if ( secretFile.exists() && secretFile.canRead() ) {
     adminPwd = secretFile.text.trim()
-    println "ℹ️  Loaded admin password from secret file (${secretPath})"
+    println "Loaded admin password from secret file (${secretPath})"
 }
 else if ( System.getenv('ADMIN_PASS') ) {
     adminPwd = System.getenv('ADMIN_PASS').trim()
-    println "ℹ️  Loaded admin password from ENV var"
+    println "Loaded admin password from ENV var"
 }
 else {
     throw new IllegalStateException(
-        "⚠️  No admin password found: neither ${secretPath} nor ENV[ADMIN_PASS] is set"
+        "No admin password found: neither ${secretPath} nor ENV[ADMIN_PASS] is set"
     )
 }
 
@@ -64,4 +64,4 @@ def acl = (oldAuth instanceof GlobalMatrixAuthorizationStrategy)
 instance.setAuthorizationStrategy(acl)
 instance.save()
 
-println "✔ Security realm, admin user, and matrix authorization configured."
+println "Security realm, admin user, and matrix authorization configured."
