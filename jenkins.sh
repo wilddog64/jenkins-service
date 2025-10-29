@@ -19,7 +19,7 @@ function docker() {
   fi
 
   podman "$@"
-  if [[ $? != 0 ]]; then
+  if ! command_exist podman; then
      echo error executing podman command
      exit 1
   fi
