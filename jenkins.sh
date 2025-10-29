@@ -93,13 +93,8 @@ function start_docker_dind_container() {
 : "${PLUGIN_TEXT=$(pwd)/SOURCES/plugins.txt}"
 
 function install_jenkins_plugins() {
-   jenkins_version=$1
+   jenkins_version="${1:?Jenkins version is required}"
    echo ">>> install/update jenkins plugins"
-
-   if [[ -z $jenkins_version ]]; then
-      echo "jenkins version missing!"
-      exit -1
-   fi
 
    jenkins_core="${jenkins_version%%-*}"
    update_center_url="https://updates.jenkins.io/update-center.actual.json?version=${jenkins_core}"
@@ -124,7 +119,7 @@ function install_jenkins_plugins() {
 : "${SSH_KEY_PATH:=$HOME/.ssh/jenkins_admin_ssh_key.pub}"
 # Function to start Jenkins container
 function start_jenkins_container() {
-    local jenkins_version=${1:-2.440.3}
+    local jenkins_version="${1:?Jenkins version is required}"
     local jenkins_admin_ssh_key_path=${ADMIN_SSH_KEY_PATH}
     local jenkins_key_path=${SSH_KEY_PATH}
 
@@ -153,7 +148,7 @@ function start_jenkins_container() {
         -v "$jenkins_key_path:$jenkins_admin_ssh_key_path:Z" \
         -v $(pwd)/SOURCES/secret.txt:/var/run/secrets/ADMIN_PASS:Z,ro \
         -w /mnt/workdir \
-        jenkins/jenkins:${jenkins_version}
+        jenkins/jenkins:"${jenkins_version}"
     echo "Jenkins container started. Access it at http://localhost:8080"
 }
 
@@ -234,7 +229,7 @@ function reload_jenkins() {
 }
 
 # --- main ---
-VERSION=${2:-2.516.1}
+VERSION=${2:?Jenkins version is required as the second argument}
 case "$1" in
     start)
        start_jenkins "${VERSION}"
@@ -250,7 +245,7 @@ case "$1" in
        ;;
     restart)
        stop_jenkins_container
-       start_jenkins "${VERSION:-2.516.1}"
+       start_jenkins "${VERSION}"
        ;;
     reload)
        reload_jenkins
