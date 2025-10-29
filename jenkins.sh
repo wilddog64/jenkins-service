@@ -143,10 +143,10 @@ function start_jenkins_container() {
         --volume jenkins-data:/var/jenkins_home:Z,U \
         --publish 8080:8080 --publish 50000:50000 \
         --publish 2233:2233 \
-        -v $(pwd):/mnt/workdir:Z \
-        -v $(pwd)/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
+        -v "$(pwd)":/mnt/workdir:Z \
+        -v "$(pwd)"/init.groovy.d/:/var/jenkins_home/init.groovy.d/ \
         -v "$jenkins_key_path:$jenkins_admin_ssh_key_path:Z" \
-        -v $(pwd)/SOURCES/secret.txt:/var/run/secrets/ADMIN_PASS:Z,ro \
+        -v "$(pwd)"/SOURCES/secret.txt:/var/run/secrets/ADMIN_PASS:Z,ro \
         -w /mnt/workdir \
         jenkins/jenkins:"${jenkins_version}"
     echo "Jenkins container started. Access it at http://localhost:8080"
@@ -194,7 +194,7 @@ function stop_jenkins_container() {
     # stop_jenkins_container dind
     # docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
     ids=$(docker ps -a --filter name=jenkins -q)
-    [[ -n $ids ]] && docker stop $ids
+    [[ -n "$ids" ]] && docker stop "$ids"
  }
 
 # Requires:
