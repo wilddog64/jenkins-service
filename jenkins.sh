@@ -111,7 +111,7 @@ function install_jenkins_plugins() {
       echo ">>> plugins install complete"
    else
       echo "warning: fail to install plugins"
-      exit -1
+      exit 1
    fi
 }
 
@@ -224,7 +224,7 @@ function reload_jenkins() {
         echo "Jenkins configuration reloaded successfully."
     else
         echo "ERROR: reload failed – check key, user permissions, or SSHD port."
-        exit -1
+        exit 1
     fi
 }
 
