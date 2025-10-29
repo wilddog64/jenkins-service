@@ -8,7 +8,7 @@ MACHINE_NAME='podman-machine-default'
 # check if given command exists
 
 function command_exist() {
-   command -v $1 "$1" 2 >&1 > /dev/null
+   command -v "$1" > /dev/null 2>&1
 }
 
 # alias podman as docker
