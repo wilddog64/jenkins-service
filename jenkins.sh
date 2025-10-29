@@ -24,6 +24,7 @@ function docker() {
      exit 1
   fi
 }
+export -f docker
 
 # Function to check if a docker machine exists
 function docker_machine_exists() {
@@ -199,19 +200,6 @@ function start_jenkins() {
     # download_and_run_containers
     install_jenkins_plugins "${version}"
     start_jenkins_container "${version}"
-}
-
-
-# stop_jenkins_container function will stop a given container that user provides
-function stop_jenkins_container() {
-    container_name=$1
-
-    docker ps -a | grep -v CONTAINER | grep $container_name | awk '{print $1}' | xargs docker container stop
-    if [[ $? != 0 ]]; then
-        echo unable to stop container $container_name
-        exit 1
-    fi
-    echo successfully stop container $container_name
 }
 
 function stop_jenkins_container() {
