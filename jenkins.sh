@@ -28,14 +28,12 @@ export -f docker
 
 # Function to check if a docker machine exists
 function docker_machine_exists() {
-   docker machine list --format "{{.Name}}" | grep -q "^$1\$"
-   return  [[ $? != 0 ]]
+   docker machine list --format "{{.Name}}" | grep -qFx -- "$1"
 }
 
 # Function to check if a docker machine is running
 function docker_machine_running() {
-   docker machine list --format "{{.Name}} {{.Running}}" | grep -q "^$MACHINE_NAME$"
-   return  [[ $? != 0 ]]
+   docker machine list --format "{{.Name}} {{.Running}}" | grep -qFx -- "$MACHINE_NAME"
 }
 
 # start docker machine
@@ -54,22 +52,19 @@ function start_docker_machine() {
 }
 
 function create_network() {
-    docker network ls | grep jenkins 2>&1 > /dev/null
-    if [[ $? != 0 ]]; then
+    if docker network ls | grep jenkins > /dev/null 2>&1; then
         docker network create jenkins
         echo create a docker network jenkins
     fi
 }
 
 function create_volumes() {
-    docker volume ls | grep jenkins-docker-certs 2>&1 > /dev/null
-    if [[ $? != 0 ]]; then
+    if docker volume ls | grep jenkins-docker-certs > /dev/null 2>&1; then
         docker volume create jenkins-docker-certs
         echo create a docker volume jenkins-docker-certs
     fi
 
-    docker volume ls | grep jenkins-data 2>&1 > /dev/null
-    if [[ $? != 0 ]]; then
+    if docker volume ls | grep jenkins-data > /dev/null 2>&1; then
         docker volume create jenkins-data
         echo create a docker volume jenkins-data
     fi
@@ -78,8 +73,7 @@ function create_volumes() {
 function start_docker_dind_container() {
     # in order to execute docker commands within a Jenkins node, we
     # download and run the docker:dind image
-    docker container ls | grep jenkins-docker 2>&1
-    if [[ $? != 0 ]]; then
+    if docker container ls | grep jenkins-docker > /dev/null 2>&1; then
         docker container run --name jenkins-docker --rm --detach \
             --privileged --network jenkins --network-alias docker \
             --env DOCKER_TLS_CERTDIR=/certs \
@@ -135,8 +129,7 @@ function start_jenkins_container() {
     local jenkins_key_path=${SSH_KEY_PATH}
 
     # Check if jenkins-lts container is running
-    docker ps | grep -q jenkins-lts
-    if [[ $? == 0 ]]; then
+    if docker ps | grep -q jenkins-lts; then
         # Container is running, check version
         current_version=$(docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
         if [[ "$current_version" == "$jenkins_version" ]]; then
@@ -222,8 +215,7 @@ function reload_jenkins() {
     local key="${JENKINS_KEY:-$HOME/.ssh/id_ed25519}"
 
     # 1  Check that the SSHD port answers
-    nc -vzw3 "$port" "$host" &>/dev/null
-    if [[ $? == 0 ]]; then
+    if nc -vzw3 "$port" "$host" &>/dev/null; then
         echo "ERROR: SSHD port $port on host $host is not listening - return code $?"
         return 1
     fi
