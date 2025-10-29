@@ -207,7 +207,6 @@ function reload_jenkins() {
     local host="${JENKINS_HOST:-localhost}"
     local port="${JENKINS_SSH_PORT:-2233}"
     local user="${JENKINS_USER:-admin}"
-    local key="${JENKINS_KEY:-$HOME/.ssh/id_ed25519}"
 
     # 1  Check that the SSHD port answers
     if nc -vzw3 "$port" "$host" &>/dev/null; then
