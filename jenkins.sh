@@ -15,13 +15,13 @@ function command_exist() {
 function docker() {
   if ! command_exist podman; then
      echo podman not installed
-     exit -1
+     exit 1
   fi
 
   podman "$@"
   if [[ $? != 0 ]]; then
      echo error executing podman command
-     exit -1
+     exit 1
   fi
 }
 
