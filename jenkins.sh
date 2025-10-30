@@ -24,7 +24,6 @@ function _docker() {
      exit 1
   fi
 }
-export -f docker
 
 # Function to check if a _docker machine exists
 function docker_machine_exists() {
