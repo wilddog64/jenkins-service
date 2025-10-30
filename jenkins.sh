@@ -12,7 +12,7 @@ function command_exist() {
 }
 
 # alias podman as docker
-function docker() {
+function _docker() {
   if ! command_exist podman; then
      echo podman not installed
      exit 1
@@ -26,46 +26,49 @@ function docker() {
 }
 export -f docker
 
-# Function to check if a docker machine exists
+# Function to check if a _docker machine exists
 function docker_machine_exists() {
-   docker machine list --format "{{.Name}}" | grep -qFx -- "$1"
+   _docker machine list --format "{{.Name}}" | grep -qFx -- "$1"
 }
 
-# Function to check if a docker machine is running
+# Function to check if a _docker machine is running
 function docker_machine_running() {
-   docker machine list --format "{{.Name}} {{.Running}}" | grep -qFx -- "$MACHINE_NAME"
+   _docker machine list --format "{{.Name}} {{.Running}}" | grep -qFx -- "$MACHINE_NAME"
 }
 
-# start docker machine
+# start _docker machine
 function start_docker_machine() {
    if docker_machine_exists $MACHINE_NAME; then
-      docker machine init
+      _docker machine init
    else
       echo "Docker machine $MACHINE_NAME already exists."
    fi
 
    if docker_machine_running; then
-      docker machine start
+      _docker machine start
    else
       echo "Docker machine $MACHINE_NAME is already running."
    fi
 }
 
 function create_network() {
-    if docker network ls | grep jenkins > /dev/null 2>&1; then
-        docker network create jenkins
-        echo create a docker network jenkins
+    _docker network ls > /dev/null 2>&1 | grep jenkins
+    if [[ $? != 0 ]]; then
+        _docker network create jenkins
+        echo create a _docker network jenkins
     fi
 }
 
 function create_volumes() {
-    if docker volume ls | grep jenkins-docker-certs > /dev/null 2>&1; then
-        docker volume create jenkins-docker-certs
+   _docker volume ls > /dev/null 2>&1 | grep jenkins-docker-certs
+    if [[ $? != 0 ]]; then
+        _docker volume create jenkins-docker-certs
         echo create a docker volume jenkins-docker-certs
     fi
 
-    if docker volume ls | grep jenkins-data > /dev/null 2>&1; then
-        docker volume create jenkins-data
+    _docker volume ls > /dev/null 2>&1 | grep jenkins-data
+    if [[ $? != 0 ]]; then
+        _docker volume create jenkins-data
         echo create a docker volume jenkins-data
     fi
 }
@@ -73,8 +76,8 @@ function create_volumes() {
 function start_docker_dind_container() {
     # in order to execute docker commands within a Jenkins node, we
     # download and run the docker:dind image
-    if docker container ls | grep jenkins-docker > /dev/null 2>&1; then
-        docker container run --name jenkins-docker --rm --detach \
+    if _docker container ls | grep jenkins-docker > /dev/null 2>&1; then
+        _docker container run --name jenkins-docker --rm --detach \
             --privileged --network jenkins --network-alias docker \
             --env DOCKER_TLS_CERTDIR=/certs \
             --volume jenkins-docker-certs:/certs/client \
@@ -98,7 +101,7 @@ function install_jenkins_plugins() {
 
    jenkins_core="${jenkins_version%%-*}"
    update_center_url="https://updates.jenkins.io/update-center.actual.json?version=${jenkins_core}"
-   docker run --rm -u jenkins \
+   _docker run --rm -u jenkins \
       -v "${PLUGIN_TEXT}:/usr/share/jenkins/ref/plugins.txt:Z" \
       --volume jenkins-data:/var/jenkins_home:Z,U \
       "jenkins/jenkins:${jenkins_version}" \
@@ -124,20 +127,20 @@ function start_jenkins_container() {
     local jenkins_key_path=${SSH_KEY_PATH}
 
     # Check if jenkins-lts container is running
-    if docker ps | grep -q jenkins-lts; then
+    if _docker ps | grep -q jenkins-lts; then
         # Container is running, check version
-        current_version=$(docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
+        current_version=$(_docker inspect --format='{{.Config.Image}}' jenkins-lts | sed 's/.*://')
         if [[ "$current_version" == "$jenkins_version" ]]; then
             echo "Jenkins container version $jenkins_version is already running."
             return 0
         else
             echo "Stopping Jenkins container with version $current_version to start version $jenkins_version..."
-            docker stop jenkins-lts
+            _docker stop jenkins-lts
         fi
     fi
 
     echo "Starting Jenkins container version $jenkins_version..."
-    docker run -u jenkins --name jenkins-lts --rm --detach \
+    _docker run -u jenkins --name jenkins-lts --rm --detach \
         -e JAVA_OPTS=-Djenkins.install.runSetupWizard=false \
         --network jenkins \
         --volume jenkins-data:/var/jenkins_home:Z,U \
@@ -155,7 +158,7 @@ function start_jenkins_container() {
 
 function download_and_run_containers() {
 
-    # run docker dind conainter
+    # run _docker dind conainter
     start_docker_dind_container
 
     # run docker jenkins/lts image
@@ -164,11 +167,11 @@ function download_and_run_containers() {
 }
 
 function show_jenkins_init_admin_password() {
-   docker logs jenkins-lts | grep -C 2 "Please use the following password"
+   _docker logs jenkins-lts | grep -C 2 "Please use the following password"
 }
 
 function in_jenkins_container() {
-    docker exec -it jenkins-lts bash
+    _docker exec -it jenkins-lts bash
 }
 
 function start_jenkins() {
@@ -193,8 +196,8 @@ function start_jenkins() {
 function stop_jenkins_container() {
     # stop_jenkins_container dind
     # docker ps -a --format "{{ .Image }} {{ .ID }}" | grep -E jenkins | awk '{print $2}' | xargs podman container stop
-    ids=$(docker ps -a --filter name=jenkins -q)
-    [[ -n "$ids" ]] && docker stop "$ids"
+    ids=$(_docker ps -a --filter name=jenkins -q)
+    [[ -n "$ids" ]] && _docker stop "$ids"
  }
 
 # Requires:
@@ -231,6 +234,7 @@ function reload_jenkins() {
 VERSION=${2:?Jenkins version is required as the second argument}
 case "$1" in
     start)
+       VERSION=${2:?Jenkins version is required as the second argument}
        start_jenkins "${VERSION}"
        ;;
     stop)
