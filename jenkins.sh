@@ -84,7 +84,7 @@ function start_docker_dind_container() {
             docker:dind
         if [[ $? != 0 ]]; then
             echo unable to download docker:dind image
-            exit -1
+            exit 1
         fi
     fi
 }
