@@ -230,7 +230,6 @@ function reload_jenkins() {
 }
 
 # --- main ---
-VERSION=${2:?Jenkins version is required as the second argument}
 case "$1" in
     start)
        VERSION=${2:?Jenkins version is required as the second argument}
