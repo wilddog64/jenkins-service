@@ -52,15 +52,14 @@ function start_docker_machine() {
 
 function create_network() {
     _docker network ls > /dev/null 2>&1 | grep jenkins
-    if [[ $? != 0 ]]; then
+    if _docker network ls > /dev/null 2>&1 | grep jenkins; then
         _docker network create jenkins
         echo create a _docker network jenkins
     fi
 }
 
 function create_volumes() {
-   _docker volume ls > /dev/null 2>&1 | grep jenkins-docker-certs
-    if [[ $? != 0 ]]; then
+    if _docker volume ls > /dev/null 2>&1 | grep jenkins-docker-certs; then
         _docker volume create jenkins-docker-certs
         echo create a docker volume jenkins-docker-certs
     fi
